@@ -19,6 +19,10 @@ module.exports = {
     'vue',
   ],
   rules: {
-    "indent": "off"
+    "indent": "off",
+    "no-alert": "off",
+    "no-unused-vars": "off",
+    "prefer-const": "off",
+    "no-useless-escape": "off",
   },
 };
