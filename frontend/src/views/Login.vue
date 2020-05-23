@@ -1,7 +1,7 @@
 <template>
     <section id="home">
         <TheHeader />
-        <Welcome />
+        <LoginUser />
         <TheFooter />
     </section>
 </template>
@@ -9,13 +9,12 @@
 <script>
 import TheHeader from '../components/TheHeader.vue';
 import TheFooter from '../components/TheFooter.vue';
-import Welcome from '../components/content/Welcome.vue';
+import LoginUser from '../components/content/LoginUser.vue';
 
 export default {
-    name: 'home',
     components: {
         TheHeader,
-        Welcome,
+        LoginUser,
         TheFooter,
     },
 };
