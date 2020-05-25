@@ -12,9 +12,9 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ master ]
   pull_request:
-    branches: [ dev ]
+    branches: [ master ]
 
 # Environment variables available to all jobs and steps in this workflow
 env:
@@ -23,9 +23,9 @@ env:
   GITHUB_SHA: ${{ github.sha }}
   GKE_ZONE: europe-west1-b
   GKE_CLUSTER: smartcity
-  IMAGE: ms_opnv_frontend
+  IMAGE: ms-opnv-frontend
   REGISTRY_HOSTNAME: gcr.io
-  DEPLOYMENT_NAME: gke_ms_opnv_frontend
+  DEPLOYMENT_NAME: ms-opnv-frontend
 
 jobs:
   setup-build-publish-deploy:
