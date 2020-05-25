@@ -4,6 +4,7 @@ import Router from 'vue-router';
 
 import Home from './views/Home.vue';
 import Login from './views/Login.vue';
+import AddUser from './views/AddUser.vue';
 
 Vue.use(Router);
 
@@ -28,6 +29,11 @@ const router = new Router({
             // meta: {
             //     requiresAuth: true,
             // },
+        },
+        {
+            path: '/user',
+            name: 'User',
+            component: AddUser,
         },
     ],
 });

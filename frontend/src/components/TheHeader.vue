@@ -4,7 +4,7 @@
             <a href="#" class="logo"><router-link to="/">ÖPNV</router-link></a>
         </div>
         <div class="col-md-7" >
-            <a href="#" class="button hidden-sm">Fahrpläne</a>
+            <router-link class="button hidden-sm" to="user">Fahrpläne</router-link>
             <a href="#" class="button hidden-sm">Tickets</a>
             <a href="#" class="button hidden-sm" style="color: lightgrey">Carsharing</a>
             <a href="#" class="button hidden-sm" style="color: lightgrey">City Roller</a>
