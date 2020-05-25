@@ -13,7 +13,7 @@ spec:
         app: ms-opnv-frontend
     spec:
       containers:
-      - image: nginx
+      - image: ms-opnv-frontend
         name: ms-opnv-frontend
         ports:
         - containerPort: 80
