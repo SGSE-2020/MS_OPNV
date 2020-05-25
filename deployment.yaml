@@ -2,20 +2,20 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    app: backend
-  name: backend
+    app: ms-opnv-frontend
+  name: ms-opnv-frontend
 spec:
   replicas: 1
   strategy: {}
   template:
     metadata:
       labels:
-        app: backend
+        app: ms-opnv-frontend
     spec:
       containers:
-      - image: node
-        name: backend
+      - image: nginx
+        name: ms-opnv-frontend
         ports:
-        - containerPort: 3000
+        - containerPort: 80
       restartPolicy: Always
 status: {}
