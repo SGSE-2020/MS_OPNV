@@ -24,10 +24,10 @@ env:
   GKE_ZONE: europe-west1-b
   GKE_CLUSTER: smartcity
   SERVICE: opnv
-  IMAGE_frontend: ms-$SERVICE-frontend
-  IMAGE_backend: ms-$SERVICE-backend
+  IMAGE_frontend: ms-${{ SERVICE }}-frontend
+  IMAGE_backend: ms-${{ SERVICE }}-backend
   REGISTRY_HOSTNAME: gcr.io
-  DEPLOYMENT_NAME: ms-$SERVICE
+  DEPLOYMENT_NAME: ms-${{ SERVICE }}
 
 jobs:
   setup-build-publish-deploy:
