@@ -23,11 +23,10 @@ env:
   GITHUB_SHA: ${{ github.sha }}
   GKE_ZONE: europe-west1-b
   GKE_CLUSTER: smartcity
-  SERVICE: opnv
-  IMAGE_frontend: ms-${{ SERVICE }}-frontend
-  IMAGE_backend: ms-${{ SERVICE }}-backend
+  IMAGE_frontend: ms-opnv-frontend
+  IMAGE_backend: ms-opnv-backend
   REGISTRY_HOSTNAME: gcr.io
-  DEPLOYMENT_NAME: ms-${{ SERVICE }}
+  DEPLOYMENT_NAME: ms-opnv
 
 jobs:
   setup-build-publish-deploy:
