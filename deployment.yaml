@@ -2,15 +2,15 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    app: ms-opnv-frontend
-  name: ms-opnv-frontend
+    app: ms-opnv
+  name: ms-opnv
 spec:
   replicas: 1
   strategy: {}
   template:
     metadata:
       labels:
-        app: ms-opnv-frontend
+        app: ms-opnv
     spec:
       containers:
       - image: ms-opnv-frontend
