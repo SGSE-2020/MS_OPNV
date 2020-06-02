@@ -17,5 +17,9 @@ spec:
         name: ms-opnv-frontend
         ports:
         - containerPort: 80
+      - image: ms-opnv-backend
+        name: ms-opnv-backend
+        ports:
+        - containerPort: 8081
       restartPolicy: Always
 status: {}
