@@ -69,7 +69,6 @@ jobs:
     # Set up kustomize
     - name: Set up Kustomize
       run: |
-        cd deployment/frontend/
         curl -o kustomize --location https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
         chmod u+x ./kustomize
 
@@ -77,8 +76,6 @@ jobs:
     - name: Deploy
       run: |
         gcloud container clusters get-credentials $GKE_CLUSTER --zone $GKE_ZONE --project $GKE_PROJECT
-        ls -la
-        cd deployment/frontend/
         ./kustomize edit set image ms-opnv-backend=$REGISTRY_HOSTNAME/$GKE_PROJECT/$IMAGE_backend:${GITHUB_SHA}
         ./kustomize edit set image ms-opnv-frontend=$REGISTRY_HOSTNAME/$GKE_PROJECT/$IMAGE_frontend:${GITHUB_SHA}
         ./kustomize build . | kubectl apply -f -
