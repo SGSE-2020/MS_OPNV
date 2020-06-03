@@ -71,10 +71,7 @@ func createNewUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRequests() {
-	port := os.Getenv("API_PORT")
-	if port == "" {
-		port = "8000" //localhost
-	}
+	port := "8080"
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/user", createNewUser).Methods("POST")

@@ -26,7 +26,7 @@ export default {
     },
     methods: {
         createUser() {
-            axios.post('http://192.168.99.102:8081/user', {
+            axios.post('http://192.168.99.102:8080/user', {
                 email: this.email,
                 name: this.name,
                 pw: this.password,

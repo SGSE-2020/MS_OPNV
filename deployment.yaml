@@ -20,6 +20,6 @@ spec:
       - image: ms-opnv-backend
         name: ms-opnv-backend
         ports:
-        - containerPort: 8081
+        - containerPort: 8080
       restartPolicy: Always
 status: {}
