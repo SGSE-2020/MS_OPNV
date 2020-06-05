@@ -48,7 +48,12 @@ func init() {
 }
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
-	fmt.Println("Endpoint Hit: homePage")
+	fmt.Println("Endpoint Hit: /")
+}
+
+func testPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the API!")
+	fmt.Println("Endpoint Hit: /api")
 }
 
 func createNewUser(w http.ResponseWriter, r *http.Request) {
@@ -67,13 +72,13 @@ func createNewUser(w http.ResponseWriter, r *http.Request) {
 	email := user.Email
 	pw := user.Password
 	GetDB().Create(&User{Password: int(pw), Name: string(name), Email: string(email)})
-
 }
 
 func handleRequests() {
 	port := "8080"
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/api", testPage)
 	myRouter.HandleFunc("/user", createNewUser).Methods("POST")
 	handler := cors.Default().Handler(myRouter)
 	log.Fatal(http.ListenAndServe(":"+port, handler))
