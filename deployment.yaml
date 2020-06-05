@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ms-opnv
+  name: ms-opnv
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: ms-opnv
+    spec:
+      containers:
+      - image: ms-opnv-frontend
+        name: ms-opnv-frontend
+        ports:
+        - containerPort: 80
+      - image: ms-opnv-backend
+        name: ms-opnv-backend
+        ports:
+        - containerPort: 8080
+      restartPolicy: Always
+status: {}
