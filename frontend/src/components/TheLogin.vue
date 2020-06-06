@@ -1,6 +1,6 @@
 <template>
     <div class="contanier">
-        <form>
+        <form v-if="this.user != true" id="login">
             <fieldset>
                 <legend>Login</legend>
                 <input type="text" id="email" placeholder="Email-Adresse" v-model="email" />
@@ -8,7 +8,6 @@
                 <input type="text" id="password" placeholder="Password" v-model="password" />
                 <br />
                 <button class="primary" @click.prevent="loginUser()">Login</button>
-                <button class="primary" @click.prevent="logoutUser()">Logout</button>
                 <ul class="errors">
                     <li v-show="!validation.password">
                         Bitte geben Sie ein Passwort ein.
@@ -19,6 +18,10 @@
                 </ul>
             </fieldset>
         </form>
+        <div v-if="this.user == true">
+            Sie sind schon eingeloggt!
+            <button class="primary" @click.prevent="logoutUser()">Logout</button>
+        </div>
     </div>
 </template>
 
@@ -33,8 +36,18 @@ export default {
         return {
             email: '',
             password: '',
+            user: '',
             error: [],
         };
+    },
+    created() {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                this.user = true;
+            } else {
+                this.user = false;
+            }
+        });
     },
     methods: {
         loginUser() {
@@ -47,8 +60,7 @@ export default {
                 firebase.auth().signInWithEmailAndPassword(this.email,
                     this.password).then((user) => {
                         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
-                            // Token zu Bürgerbüro senden -> Uid zurückbekommen -> Dann User valid
-                            alert(firebase.auth().currentUser.email);
+                            console.log(firebase.auth().currentUser.email);
                         }).catch((error) => {
                             console.log(error);
                         });
@@ -56,11 +68,11 @@ export default {
                     if (error.code === 'auth/invalid-email'
                     || error.code === 'auth/wrong-password'
                     || error.code === 'auth/user-not-found') {
-                        alert('E-Mail oder Passwort falsch oder User existiert nicht');
+                        console.log('E-Mail oder Passwort falsch oder User existiert nicht');
                     } else if (error.code === 'auth/user-disabled') {
-                        alert('Dieser Nutzer ist deaktiviert');
+                        console.log('Dieser Nutzer ist deaktiviert');
                     } else {
-                        alert(error);
+                        console.log(error);
                     }
                 });
             } else {
@@ -70,9 +82,9 @@ export default {
         logoutUser() {
             firebase.auth().signOut().then(() => {
                 // Logout erfolgreich
-                alert('Logout Erfoglreich!');
+                console.log('Logout Erfoglreich!');
             }, (error) => {
-                alert('Logout fehlgeschlagen');
+                console.log('Logout fehlgeschlagen');
             });
         },
     },

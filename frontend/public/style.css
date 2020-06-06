@@ -3,4 +3,12 @@ div #welcome {
     height: 600px;
 
     text-align: center;
+} 
+.container {
+
+}
+
+div #login {
+    display: inline-block;
+    text-align: center;
 }
