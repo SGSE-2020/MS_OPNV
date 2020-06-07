@@ -1,22 +1,24 @@
 <template>
     <section id="home">
         <TheHeader />
-        <Welcome />
-        <TheFooter />
+        <div class="row">
+            <div class="col-md-10 drawer" id="welcome">
+                <h1>Willkommen auf dem ÖPNV-Portal unserer Smart City</h1>
+            </div>
+            <TheSidebar />
+        </div>
     </section>
 </template>
 
 <script>
 import TheHeader from '../components/TheHeader.vue';
-import TheFooter from '../components/TheFooter.vue';
-import Welcome from '../components/content/Welcome.vue';
+import TheSidebar from '../components/TheSidebar.vue';
 
 export default {
-    name: 'home',
+    name: 'Home',
     components: {
         TheHeader,
-        Welcome,
-        TheFooter,
+        TheSidebar,
     },
 };
 </script>

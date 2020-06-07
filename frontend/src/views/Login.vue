@@ -1,21 +1,19 @@
 <template>
     <section id="home">
         <TheHeader />
-        <LoginUser />
-        <TheFooter />
+        <TheLogin />
     </section>
 </template>
 
 <script>
 import TheHeader from '../components/TheHeader.vue';
-import TheFooter from '../components/TheFooter.vue';
-import LoginUser from '../components/content/LoginUser.vue';
+import TheLogin from '../components/TheLogin.vue';
 
 export default {
+    name: 'Login',
     components: {
         TheHeader,
-        LoginUser,
-        TheFooter,
+        TheLogin,
     },
 };
 </script>

@@ -57,10 +57,6 @@ func testPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func createNewUser(w http.ResponseWriter, r *http.Request) {
-	// get the body of our POST request
-	// unmarshal this into a new Article struct
-	// append this to our Articles array.
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("{\"hello\": \"world\"}"))
 	fmt.Println("user api Reched")
@@ -76,6 +72,7 @@ func createNewUser(w http.ResponseWriter, r *http.Request) {
 
 func handleRequests() {
 	port := "8080"
+
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/api", testPage)

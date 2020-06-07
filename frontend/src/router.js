@@ -4,7 +4,8 @@ import Router from 'vue-router';
 
 import Home from './views/Home.vue';
 import Login from './views/Login.vue';
-import AddUser from './views/AddUser.vue';
+import Schedule from './views/Schedule.vue';
+import Ticket from './views/Ticket.vue';
 
 Vue.use(Router);
 
@@ -24,16 +25,21 @@ const router = new Router({
         },
         {
             path: '/home',
-            name: 'home',
+            name: 'Home',
             component: Home,
             // meta: {
             //     requiresAuth: true,
             // },
         },
         {
-            path: '/user',
-            name: 'User',
-            component: AddUser,
+            path: '/schedule',
+            name: 'Schedule',
+            component: Schedule,
+        },
+        {
+            path: '/ticket',
+            name: 'Ticket',
+            component: Ticket,
         },
     ],
 });
