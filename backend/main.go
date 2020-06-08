@@ -33,7 +33,7 @@ func init() {
 	username := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbName := os.Getenv("POSTGRES_DB")
-	dbHost := os.Getenv("POSTGRES_HOST")
+	dbHost := "localhost"
 
 	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", dbHost, username, dbName, password) //Build connection string
 	fmt.Println(dbUri)
@@ -46,6 +46,7 @@ func init() {
 	db = conn
 	db.Debug().AutoMigrate(&User{}) //Database migration
 }
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
 	fmt.Println("Endpoint Hit: /")
@@ -54,6 +55,21 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 func testPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the API!")
 	fmt.Println("Endpoint Hit: /api")
+
+	username := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbName := os.Getenv("POSTGRES_DB")
+	dbHost := "localhost"
+
+	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", dbHost, username, dbName, password) //Build connection string
+	fmt.Println(dbUri)
+
+	conn, err := gorm.Open("postgres", dbUri)
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	db = conn
 }
 
 func createNewUser(w http.ResponseWriter, r *http.Request) {

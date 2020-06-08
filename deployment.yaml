@@ -19,7 +19,50 @@ spec:
         - containerPort: 80
       - image: ms-opnv-backend
         name: ms-opnv-backend
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: ms-opnv
+                key: POSTGRES_DB
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: ms-opnv
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ms-opnv
+                key: POSTGRES_PASSWORD
         ports:
         - containerPort: 8080
+      - image: postgres
+        name: ms-opnv-db
+        env:
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: ms-opnv
+                key: POSTGRES_DB
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: ms-opnv
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ms-opnv
+                key: POSTGRES_PASSWORD
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data/
+          name: db
+          subPath: opnv-db
       restartPolicy: Always
+      volumes:
+      - name: db
+        gcePersistentDisk:
+          pdName: smartcity-databases
+          fsType: ext4
 status: {}
