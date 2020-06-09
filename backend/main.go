@@ -15,6 +15,14 @@ import (
 )
 
 var db *gorm.DB //database
+var dbInitFlag bool = false
+var USERNAME = os.Getenv("POSTGRES_USER")
+var PASSWORD = os.Getenv("POSTGRES_PASSWORD")
+var DBNAME = os.Getenv("POSTGRES_DB")
+
+//var DBHOST = "192.168.99.102" //dev
+var DBHOST = "localhost"
+var APIPORT = "8080"
 
 type User struct {
 	gorm.Model
@@ -24,27 +32,8 @@ type User struct {
 }
 
 func init() {
-
-	// e := godotenv.Load("../env/.env") //Load .env file
-	// if e != nil {
-	// 	fmt.Print(e)
-	// }
-
-	username := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("POSTGRES_DB")
-	dbHost := "localhost"
-
-	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", dbHost, username, dbName, password) //Build connection string
-	fmt.Println(dbUri)
-
-	conn, err := gorm.Open("postgres", dbUri)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	db = conn
-	db.Debug().AutoMigrate(&User{}) //Database migration
+	InitDB()
+	defer GetDB().Close()
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {
@@ -56,51 +45,77 @@ func testPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the API!")
 	fmt.Println("Endpoint Hit: /api")
 
-	username := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	dbName := os.Getenv("POSTGRES_DB")
-	dbHost := "localhost"
-
-	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", dbHost, username, dbName, password) //Build connection string
-	fmt.Println(dbUri)
-
-	conn, err := gorm.Open("postgres", dbUri)
-	if err != nil {
-		fmt.Print(err)
-	}
-
-	db = conn
 }
 
 func createNewUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("{\"hello\": \"world\"}"))
-	fmt.Println("user api Reched")
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	var user User
 	json.Unmarshal(reqBody, &user)
 	json.NewEncoder(w).Encode(user)
-	name := user.Name
-	email := user.Email
-	pw := user.Password
-	GetDB().Create(&User{Password: int(pw), Name: string(name), Email: string(email)})
+
+	w.Header().Set("Content-Type", "application/json")
+	if ConnectDB() {
+		GetDB().Create(&User{Password: int(user.Password), Name: string(user.Name), Email: string(user.Email)})
+		w.Write([]byte("{\"Response\": \"User wurde erstellt\"}"))
+		defer GetDB().Close()
+	} else {
+		w.Write([]byte("{\"Response\": \"Keine Verbindung zur Datenbank\"}"))
+	}
+}
+
+func getUsers(w http.ResponseWriter, r *http.Request) {
+	if ConnectDB() {
+		var resultUsers []User
+		GetDB().Find(&resultUsers)
+		defer GetDB().Close()
+		arr, err := json.Marshal(resultUsers)
+		if err != nil {
+			w.Write([]byte("{\"Response\": \"User konnte nicht Decodiert werden\"}"))
+		} else {
+			w.Write(arr)
+		}
+	} else {
+		w.Write([]byte("{\"Response\": \"Keine Verbindung zur Datenbank\"}"))
+	}
+
 }
 
 func handleRequests() {
-	port := "8080"
-
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/api", testPage)
+	myRouter.HandleFunc("/users", getUsers)
 	myRouter.HandleFunc("/user", createNewUser).Methods("POST")
 	handler := cors.Default().Handler(myRouter)
-	log.Fatal(http.ListenAndServe(":"+port, handler))
+	log.Fatal(http.ListenAndServe(":"+APIPORT, handler))
 }
 
 func main() {
 	handleRequests()
 }
 
+// Database functions
 func GetDB() *gorm.DB {
 	return db
+}
+
+func ConnectDB() bool {
+	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", DBHOST, USERNAME, DBNAME, PASSWORD) //Build connection string
+	conn, err := gorm.Open("postgres", dbUri)
+	if err != nil {
+		fmt.Print(err)
+		return false
+	} else {
+		db = conn
+		return true
+	}
+}
+
+func InitDB() {
+	if ConnectDB() {
+		GetDB().Debug().AutoMigrate(&User{}) //Database migration
+		dbInitFlag = true
+	} else {
+		fmt.Print("Keine Verbindung zur Datenbank")
+	}
 }
