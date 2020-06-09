@@ -63,6 +63,6 @@ spec:
       volumes:
       - name: db
         gcePersistentDisk:
-          pdName: smartcity-databases
+          pdName: ms-opnv
           fsType: ext4
 status: {}

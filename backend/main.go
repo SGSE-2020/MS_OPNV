@@ -32,8 +32,10 @@ type User struct {
 }
 
 func init() {
-	InitDB()
-	defer GetDB().Close()
+	ConnectDB()
+	if dbInitFlag {
+		defer GetDB().Close()
+	}
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {
@@ -104,18 +106,14 @@ func ConnectDB() bool {
 	conn, err := gorm.Open("postgres", dbUri)
 	if err != nil {
 		fmt.Print(err)
+		fmt.Print("Keine Verbindung zur Datenbank")
 		return false
 	} else {
 		db = conn
+		if !dbInitFlag {
+			GetDB().Debug().AutoMigrate(&User{}) //Database migration
+			dbInitFlag = true
+		}
 		return true
-	}
-}
-
-func InitDB() {
-	if ConnectDB() {
-		GetDB().Debug().AutoMigrate(&User{}) //Database migration
-		dbInitFlag = true
-	} else {
-		fmt.Print("Keine Verbindung zur Datenbank")
 	}
 }
