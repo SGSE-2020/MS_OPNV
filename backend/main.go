@@ -33,7 +33,9 @@ type User struct {
 
 func init() {
 	InitDB()
-	defer GetDB().Close()
+	if dbInitFlag {
+		defer GetDB().Close()
+	}
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {
