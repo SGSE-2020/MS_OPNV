@@ -37,7 +37,7 @@ export default {
     },
     methods: {
         testBackendCall() {
-            axios.get('http://opnv.dvess.network/api/api')
+            axios.get(`http://${process.env.VUE_APP_BACKEND_HOST}/api`)
                 .then((response) => {
                     console.log(response.data);
                     this.text = response.data;
@@ -47,7 +47,7 @@ export default {
                 });
         },
         testGetUsersCall() {
-            axios.get('http://opnv.dvess.network/api/users')
+            axios.get(`http://${process.env.VUE_APP_BACKEND_HOST}/users`)
                 .then((response) => {
                     this.users = response.data;
                 })
