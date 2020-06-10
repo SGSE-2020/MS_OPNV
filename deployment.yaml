@@ -35,6 +35,11 @@ spec:
               secretKeyRef:
                 name: ms-opnv
                 key: POSTGRES_PASSWORD
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: ms-opnv
+                key: DB_HOST
         ports:
         - containerPort: 8080
       - image: postgres
