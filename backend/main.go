@@ -21,8 +21,8 @@ var PASSWORD = os.Getenv("POSTGRES_PASSWORD")
 var DBNAME = os.Getenv("POSTGRES_DB")
 
 //var DBHOST = "192.168.99.102" //dev
-var DBHOST = "localhost"
-var APIPORT = "8080"
+var DB_HOST = os.Getenv("DB_HOST")
+var API_PORT = "8080"
 
 type User struct {
 	gorm.Model
@@ -89,7 +89,7 @@ func handleRequests() {
 	myRouter.HandleFunc("/users", getUsers)
 	myRouter.HandleFunc("/user", createNewUser).Methods("POST")
 	handler := cors.Default().Handler(myRouter)
-	log.Fatal(http.ListenAndServe(":"+APIPORT, handler))
+	log.Fatal(http.ListenAndServe(":"+API_PORT, handler))
 }
 
 func main() {
@@ -102,7 +102,7 @@ func GetDB() *gorm.DB {
 }
 
 func ConnectDB() bool {
-	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", DBHOST, USERNAME, DBNAME, PASSWORD) //Build connection string
+	dbUri := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", DB_HOST, USERNAME, DBNAME, PASSWORD) //Build connection string
 	conn, err := gorm.Open("postgres", dbUri)
 	if err != nil {
 		fmt.Print(err)

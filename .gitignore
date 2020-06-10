@@ -2,4 +2,6 @@
 frontend/node_modules
 *.code-workspace
 frontend/package-lock.json
+frontend/.env.development
+frontend/Dockerfile-dev
 docker-compose.yaml
