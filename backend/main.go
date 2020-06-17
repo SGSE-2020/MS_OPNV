@@ -96,7 +96,7 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	verifiedUser, err := client.VerifyUser(ctx, &userpb.UserToken{Token: user.Token})
 	if err != nil {
-		w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt\"}"))
+		w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + " \"}"))
 	} else {
 		userData, err := client.GetUser(ctx, &userpb.UserId{Uid: verifiedUser.Uid})
 		if err != nil {
