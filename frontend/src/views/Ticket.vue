@@ -9,7 +9,7 @@
                 <button class="primary" @click="testGetUsersCall()">TestGetUserCall</button>
                 <ul v-if="this.users.length != 0">
                     <li v-for="(user, i) in this.users" :key="i">
-                        {{ user.name }}
+                        {{ user.token }}
                     </li>
                 </ul>
             </div>
@@ -37,7 +37,7 @@ export default {
     },
     methods: {
         testBackendCall() {
-            axios.get(`http://${process.env.VUE_APP_BACKEND_HOST}/api`)
+            axios.get(`${process.env.VUE_APP_BACKEND_HOST}/api`)
                 .then((response) => {
                     console.log(response.data);
                     this.text = response.data;
@@ -47,7 +47,7 @@ export default {
                 });
         },
         testGetUsersCall() {
-            axios.get(`http://${process.env.VUE_APP_BACKEND_HOST}/users`)
+            axios.get(`${process.env.VUE_APP_BACKEND_HOST}/users`)
                 .then((response) => {
                     this.users = response.data;
                 })

@@ -27,6 +27,7 @@
 
 <script>
 import firebase from 'firebase';
+import axios from 'axios';
 
 const emailRE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -61,6 +62,8 @@ export default {
                     this.password).then((user) => {
                         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
                             console.log(firebase.auth().currentUser.email);
+                            console.log(idToken);
+                            this.validateUser(idToken);
                         }).catch((error) => {
                             console.log(error);
                         });
@@ -86,6 +89,15 @@ export default {
             }, (error) => {
                 console.log('Logout fehlgeschlagen');
             });
+        },
+        validateUser(idToken) {
+            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+                Token: idToken,
+                })
+                .then((response) => { console.log('User Wurde Validiert'); })
+                .catch((e) => {
+                this.error.push(e);
+                });
         },
     },
     computed: {
