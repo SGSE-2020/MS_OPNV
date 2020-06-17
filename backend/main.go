@@ -8,27 +8,67 @@ import (
 	"net/http"
 	"os"
 
+	userpb "main/internal/proto"
+
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/rs/cors"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
-var db *gorm.DB //database
-var dbInitFlag bool = false
 var USERNAME = os.Getenv("POSTGRES_USER")
 var PASSWORD = os.Getenv("POSTGRES_PASSWORD")
 var DBNAME = os.Getenv("POSTGRES_DB")
-
-//var DBHOST = "192.168.99.102" //dev
 var DB_HOST = os.Getenv("DB_HOST")
+var GRPC_HOST = "ms-buergerbuero"
 var API_PORT = "8080"
+var GRPC_PORT = "50051"
+
+var db *gorm.DB //database
+var dbInitFlag bool = false
+
+var grpc_client *grpc.ClientConn
 
 type User struct {
 	gorm.Model
+	UId   string `json:"uid"`
+	Token string `json:"token"`
+}
+
+type Area struct {
+	gorm.Model
 	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password int    `json:"pw"`
+	AreaType string `json:"areaType"`
+	Price    int    `json:"price"`
+}
+
+type Ticket struct {
+	gorm.Model
+	AreaId       string `json:"areaId"`
+	Qrcode       string `json:"qrCode"`
+	Validitydate string `json:"validityDate"`
+	TicketType   string `json:"ticketType"`
+}
+
+type TaxiCompany struct {
+	gorm.Model
+	Name       string `json:"name"`
+	Adress     string `json:"adress"`
+	Telenumber string `json:"telenumber"`
+}
+
+type TrafficInformation struct {
+	gorm.Model
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	StartDate   string `json:"startDate"`
+	EndDate     string `json:"endDate"`
+}
+
+type VerifyUser struct {
+	Token string
 }
 
 func init() {
@@ -38,30 +78,32 @@ func init() {
 	}
 }
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to the HomePage!")
-	fmt.Println("Endpoint Hit: /")
-}
-
 func testPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the API!")
-	fmt.Println("Endpoint Hit: /api")
-
+	//	fmt.Println("Endpoint Hit: /api")
 }
 
-func createNewUser(w http.ResponseWriter, r *http.Request) {
+func validateUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var user User
+	var user VerifyUser
 	json.Unmarshal(reqBody, &user)
 	json.NewEncoder(w).Encode(user)
 
 	w.Header().Set("Content-Type", "application/json")
-	if ConnectDB() {
-		GetDB().Create(&User{Password: int(user.Password), Name: string(user.Name), Email: string(user.Email)})
-		w.Write([]byte("{\"Response\": \"User wurde erstellt\"}"))
-		defer GetDB().Close()
+
+	ConnectGRPC()
+	client := userpb.NewUserServiceClient(grpc_client)
+	ctx := context.Background()
+	verifiedUser, err := client.VerifyUser(ctx, &userpb.UserToken{Token: user.Token})
+	if err != nil {
+		w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt\"}"))
 	} else {
-		w.Write([]byte("{\"Response\": \"Keine Verbindung zur Datenbank\"}"))
+		userData, err := client.GetUser(ctx, &userpb.UserId{Uid: verifiedUser.Uid})
+		if err != nil {
+			w.Write([]byte("{\"User ID\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
+		} else {
+			w.Write([]byte(userData))
+		}
 	}
 }
 
@@ -84,10 +126,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
-	myRouter.HandleFunc("/", homePage)
+
+	// active routes
 	myRouter.HandleFunc("/api", testPage)
 	myRouter.HandleFunc("/users", getUsers)
-	myRouter.HandleFunc("/user", createNewUser).Methods("POST")
+	myRouter.HandleFunc("/user", validateUser).Methods("POST")
+
 	handler := cors.Default().Handler(myRouter)
 	log.Fatal(http.ListenAndServe(":"+API_PORT, handler))
 }
@@ -116,4 +160,19 @@ func ConnectDB() bool {
 		}
 		return true
 	}
+}
+
+func ConnectGRPC() {
+	conn, _ := grpc.Dial(
+		GRPC_HOST+":"+GRPC_PORT, grpc.WithInsecure())
+	grpc_client = conn
+	// if err != nil {
+	// 	fmt.Print("Keine Verbindung zum grpc-Server")
+	// 	fmt.Print(err)
+	// 	return false
+	// } else {
+	// 	fmt.Println("Ich gehe hier trotzdem rein")
+	// 	grpc_client = conn
+	// 	return true
+	// }
 }
