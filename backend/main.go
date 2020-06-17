@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	userpb "main/internal/proto"
+	userpb "./internal/proto"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -102,7 +102,11 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Write([]byte("{\"User ID\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
 		} else {
-			w.Write([]byte(userData))
+			jsonData, err := json.Marshal(userData)
+			if err != nil {
+				log.Println(err)
+			}
+			w.Write([]byte(string(jsonData)))
 		}
 	}
 }
