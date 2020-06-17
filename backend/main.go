@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	userpb "./internal/proto"
+	userpb "main/internal/proto"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
