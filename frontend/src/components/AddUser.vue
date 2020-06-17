@@ -26,7 +26,7 @@ export default {
     },
     methods: {
         createUser() {
-            axios.post('http://opnv.dvess.network/api/user', {
+            axios.post(`https://${process.env.VUE_APP_BACKEND_HOST}/users`, {
                 email: this.email,
                 name: this.name,
                 pw: this.password,
