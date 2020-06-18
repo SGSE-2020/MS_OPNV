@@ -15,10 +15,24 @@ spec:
       containers:
       - image: ms-opnv-frontend
         name: ms-opnv-frontend
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: 50m
+          requests:
+            memory: 256Mi
+            cpu: 50m
         ports:
         - containerPort: 80
       - image: ms-opnv-backend
         name: ms-opnv-backend
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: 50m
+          requests:
+            memory: 256Mi
+            cpu: 50m
         env:
           - name: POSTGRES_DB
             valueFrom:
@@ -44,6 +58,13 @@ spec:
         - containerPort: 8080
       - image: postgres
         name: ms-opnv-db
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: 50m
+          requests:
+            memory: 256Mi
+            cpu: 50m
         env:
           - name: POSTGRES_DB
             valueFrom:
