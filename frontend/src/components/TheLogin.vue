@@ -92,7 +92,7 @@ export default {
         },
         validateUser(idToken) {
             axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
-                Token: idToken,
+                Name: 'idToken',
                 })
                 .then((response) => { console.log('User Wurde Validiert'); })
                 .catch((e) => {
