@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"os"
 
-	//userpb "main/internal/proto"
-	parkplatzpb "main/internal/proto"
+	userpb "main/internal/proto"
+	//parkplatzpb "main/internal/proto"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -90,56 +90,56 @@ func testPage(w http.ResponseWriter, r *http.Request) {
 	//	fmt.Println("Endpoint Hit: /api")
 }
 
-func validateUser(w http.ResponseWriter, r *http.Request) {
-	reqBody, _ := ioutil.ReadAll(r.Body)
-	var helloreq HelloReq
-	json.Unmarshal(reqBody, &helloreq)
-	json.NewEncoder(w).Encode(helloreq)
-
-	w.Header().Set("Content-Type", "application/json")
-
-	ConnectGRPC()
-	client := parkplatzpb.NewParkplatzClient(grpc_client)
-	ctx := context.Background()
-	verifiedUser, err := client.Provide(ctx, &parkplatzpb.HelloRequest{Name: helloreq.Name})
-	if err != nil {
-		w.Write([]byte("{\"User ID\": \"Der gRPC Call Provide hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + "\"}"))
-	} else {
-		jsonData, err := json.Marshal(verifiedUser)
-		if err != nil {
-			log.Println(err)
-		}
-		w.Write([]byte(string(jsonData)))
-	}
-}
-
 // func validateUser(w http.ResponseWriter, r *http.Request) {
 // 	reqBody, _ := ioutil.ReadAll(r.Body)
-// 	var user VerifyUser
-// 	json.Unmarshal(reqBody, &user)
-// 	json.NewEncoder(w).Encode(user)
+// 	var helloreq HelloReq
+// 	json.Unmarshal(reqBody, &helloreq)
+// 	json.NewEncoder(w).Encode(helloreq)
 
 // 	w.Header().Set("Content-Type", "application/json")
 
 // 	ConnectGRPC()
-// 	client := userpb.NewUserServiceClient(grpc_client)
+// 	client := parkplatzpb.NewParkplatzClient(grpc_client)
 // 	ctx := context.Background()
-// 	verifiedUser, err := client.VerifyUser(ctx, &userpb.UserToken{Token: user.Token})
+// 	verifiedUser, err := client.Provide(ctx, &parkplatzpb.HelloRequest{Name: helloreq.Name})
 // 	if err != nil {
-// 		w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + " \"}"))
+// 		w.Write([]byte("{\"User ID\": \"Der gRPC Call Provide hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + "\"}"))
 // 	} else {
-// 		userData, err := client.GetUser(ctx, &userpb.UserId{Uid: verifiedUser.Uid})
+// 		jsonData, err := json.Marshal(verifiedUser)
 // 		if err != nil {
-// 			w.Write([]byte("{\"User ID\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
-// 		} else {
-// 			jsonData, err := json.Marshal(userData)
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			w.Write([]byte(string(jsonData)))
+// 			log.Println(err)
 // 		}
+// 		w.Write([]byte(string(jsonData)))
 // 	}
 // }
+
+func validateUser(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var user VerifyUser
+	json.Unmarshal(reqBody, &user)
+	json.NewEncoder(w).Encode(user)
+
+	w.Header().Set("Content-Type", "application/json")
+
+	ConnectGRPC()
+	client := userpb.NewUserServiceClient(grpc_client)
+	ctx := context.Background()
+	verifiedUser, err := client.VerifyUser(ctx, &userpb.UserToken{Token: user.Token})
+	if err != nil {
+		w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + " \"}"))
+	} else {
+		userData, err := client.GetUser(ctx, &userpb.UserId{Uid: verifiedUser.Uid})
+		if err != nil {
+			w.Write([]byte("{\"User ID\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
+		} else {
+			jsonData, err := json.Marshal(userData)
+			if err != nil {
+				log.Println(err)
+			}
+			w.Write([]byte(string(jsonData)))
+		}
+	}
+}
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	if ConnectDB() {
