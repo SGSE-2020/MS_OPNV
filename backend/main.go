@@ -8,8 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	userpb "main/internal/proto"
-	//parkplatzpb "main/internal/proto"
+	user "main/internal/proto"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -24,9 +23,9 @@ var PASSWORD = os.Getenv("POSTGRES_PASSWORD")
 var DBNAME = os.Getenv("POSTGRES_DB")
 var DB_HOST = os.Getenv("DB_HOST")
 
-var GRPC_HOST = "ms-buergerbuero"
-
+// var GRPC_HOST = "ms-buergerbuero"
 // var GRPC_HOST = "ms-parkplatz"
+var GRPC_HOST = "192.168.99.102"
 var API_PORT = "8080"
 var GRPC_PORT = "50051"
 
@@ -71,14 +70,6 @@ type TrafficInformation struct {
 	EndDate     string `json:"endDate"`
 }
 
-type VerifyUser struct {
-	Token string
-}
-
-type HelloReq struct {
-	Name string
-}
-
 func init() {
 	ConnectDB()
 	if dbInitFlag {
@@ -116,28 +107,29 @@ func testPage(w http.ResponseWriter, r *http.Request) {
 
 func validateUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var user VerifyUser
-	json.Unmarshal(reqBody, &user)
-	json.NewEncoder(w).Encode(user)
+	var userA user.UserToken
+	json.Unmarshal(reqBody, &userA)
+	json.NewEncoder(w).Encode(userA)
 
 	w.Header().Set("Content-Type", "application/json")
 
-	ConnectGRPC()
-	client := userpb.NewUserServiceClient(grpc_client)
-	ctx := context.Background()
-	verifiedUser, err := client.VerifyUser(ctx, &userpb.UserToken{Token: user.Token})
-	if err != nil {
-		w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + " \"}"))
-	} else {
-		userData, err := client.GetUser(ctx, &userpb.UserId{Uid: verifiedUser.Uid})
+	if ConnectGRPC() {
+		client := user.NewUserServiceClient(grpc_client)
+		ctx := context.Background()
+		verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: userA.Token})
 		if err != nil {
-			w.Write([]byte("{\"User ID\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
+			w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + " \"}"))
 		} else {
-			jsonData, err := json.Marshal(userData)
+			userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
 			if err != nil {
-				log.Println(err)
+				w.Write([]byte("{\"User ID\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
+			} else {
+				jsonData, err := json.Marshal(userData)
+				if err != nil {
+					log.Println(err)
+				}
+				w.Write([]byte(string(jsonData)))
 			}
-			w.Write([]byte(string(jsonData)))
 		}
 	}
 }
@@ -197,17 +189,16 @@ func ConnectDB() bool {
 	}
 }
 
-func ConnectGRPC() {
-	conn, _ := grpc.Dial(
+func ConnectGRPC() bool {
+	conn, err := grpc.Dial(
 		GRPC_HOST+":"+GRPC_PORT, grpc.WithInsecure())
-	grpc_client = conn
-	// if err != nil {
-	// 	fmt.Print("Keine Verbindung zum grpc-Server")
-	// 	fmt.Print(err)
-	// 	return false
-	// } else {
-	// 	fmt.Println("Ich gehe hier trotzdem rein")
-	// 	grpc_client = conn
-	// 	return true
-	// }
+	if err != nil {
+		fmt.Print("Keine Verbindung zum grpc-Server")
+		fmt.Print(err)
+		return false
+	} else {
+		fmt.Println("Ich gehe hier trotzdem rein")
+		grpc_client = conn
+		return true
+	}
 }
