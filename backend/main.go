@@ -24,8 +24,9 @@ var PASSWORD = os.Getenv("POSTGRES_PASSWORD")
 var DBNAME = os.Getenv("POSTGRES_DB")
 var DB_HOST = os.Getenv("DB_HOST")
 
-// var GRPC_HOST = "ms-buergerbuero"
-var GRPC_HOST = "ms-parkplatz"
+var GRPC_HOST = "ms-buergerbuero"
+
+// var GRPC_HOST = "ms-parkplatz"
 var API_PORT = "8080"
 var GRPC_PORT = "50051"
 
