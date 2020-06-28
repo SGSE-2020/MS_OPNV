@@ -1,8 +1,10 @@
 <template>
-    <section id="home">
+    <div class="container" >
         <TheHeader />
-        <TheLogin />
-    </section>
+        <div id="container">
+            <TheLogin />
+        </div>
+    </div>
 </template>
 
 <script>

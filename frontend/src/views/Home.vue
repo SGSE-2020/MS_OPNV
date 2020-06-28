@@ -1,13 +1,17 @@
 <template>
-    <section id="home">
+    <div class="container" >
         <TheHeader />
-        <div class="row">
-            <div class="col-md-10 drawer" id="welcome">
-                <h1>Willkommen auf dem ÖPNV-Portal unserer Smart City</h1>
+        <div id="container">
+            <div class="row">
+                <div id="center" class="col-sm-8">
+                    <h1>Willkommen auf dem ÖPNV-Portal unserer Smart City</h1>
+                    <!--<div class="card large">
+                    </div>-->
+                </div>
+                <TheSidebar />
             </div>
-            <TheSidebar />
         </div>
-    </section>
+    </div>
 </template>
 
 <script>

@@ -1,24 +1,32 @@
 <template>
-    <section id="home">
+    <div class="container" >
         <TheHeader />
-        <div class="row">
-            <div class="col-md-10 drawer" id="welcome">
-                <h1>Hier können bald Tickets für Bus und Bahn erworben werden!</h1>
-                <button class="primary" @click="testBackendCall()">TestBackendCall</button>
-                <p v-if="this.text != ''">{{this.text}}</p>
-                <button class="primary" @click="testGetUsersCall()">TestGetUserCall</button>
-                <ul v-if="this.users.length != 0">
-                    <li v-for="(user, i) in this.users" :key="i">
-                        {{ user.token }}
-                    </li>
-                </ul>
+        <div id="container">
+            <div class="row">
+                <div id="center" class="col-sm-8">
+                    <div v-if="this.user == true" id="login">
+                        Diesen Bereich sieht man nur wenn man eingeloggt ist.
+                    </div>
+                    <div v-if="this.user == false">
+                        Um Tickets zu kaufen müssen sie sich einloggen!
+                    </div>
+                    <!--<button class="primary" @click="testBackendCall()">TestBackendCall</button>
+                    <p v-if="this.text != ''">{{this.text}}</p>
+                    <button class="primary" @click="testGetUsersCall()">TestGetUserCall</button>
+                    <ul v-if="this.users.length != 0">
+                        <li v-for="(user, i) in this.users" :key="i">
+                            {{ user.token }}
+                        </li>
+                    </ul>-->
+                </div>
+                <TheSidebar />
             </div>
-            <TheSidebar />
         </div>
-    </section>
+    </div>
 </template>
 
 <script>
+import firebase from 'firebase';
 import axios from 'axios';
 import TheHeader from '../components/TheHeader.vue';
 import TheSidebar from '../components/TheSidebar.vue';
@@ -32,8 +40,18 @@ export default {
     data() {
         return {
             text: '',
+            user: '',
             users: [],
         };
+    },
+    created() {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                this.user = true;
+            } else {
+                this.user = false;
+            }
+        });
     },
     methods: {
         testBackendCall() {

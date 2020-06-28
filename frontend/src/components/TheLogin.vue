@@ -1,11 +1,11 @@
 <template>
-    <div class="contanier">
+    <div >
         <form v-if="this.user != true" id="login">
             <fieldset>
                 <legend>Login</legend>
-                <input type="text" id="email" placeholder="Email-Adresse" v-model="email" />
+                <input type="email" id="email" placeholder="Email-Adresse" v-model="email" />
                 <br />
-                <input type="text" id="password" placeholder="Password" v-model="password" />
+                <input type="password" id="password" placeholder="Password" v-model="password" />
                 <br />
                 <button class="primary" @click.prevent="loginUser()">Login</button>
                 <ul class="errors">

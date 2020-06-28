@@ -1,26 +1,20 @@
 <template>
     <header class="sticky row">
-        <div class="col-md-2">
             <a href="#" class="logo"><router-link to="/">ÖPNV</router-link></a>
-        </div>
-        <div class="col-md-7" >
-            <router-link class="button hidden-sm" to="/schedule">Fahrpläne</router-link>
-            <router-link class="button hidden-sm" to="/ticket">Tickets</router-link>
+            <router-link class="button" to="/schedule">Fahrpläne</router-link>
+            <router-link class="button" to="/ticket">Tickets</router-link>
             <a href="#" class="button hidden-sm" style="color: lightgrey">Carsharing</a>
             <a href="#" class="button hidden-sm" style="color: lightgrey">City Roller</a>
-        </div>
-        <div v-if="user == false" class="col-md">
-            <router-link class="button hidden-sm" id="login" to="/login">
-            Login
+        <div v-if="user == false">
+            <router-link class="button" id="login" to="/login">
+                Login
             </router-link>
         </div>
-        <div v-if="user == true" class="col-md">
-            <router-link class="button hidden-sm" id="login" to="/login">
-            <span>Mein Konto</span>
+        <div v-if="user == true">
+            <router-link class="button" id="login" to="/myaccount">
+                Mein Konto
             </router-link>
-        </div>
-        <div v-if="user == true" class="col-sm">
-            <a href="#" class="button hidden-sm" @click.prevent="logoutUser()" id="logout">
+            <a href="#" class="button" @click.prevent="logoutUser()" id="logout">
                 Logout
             </a>
         </div>
