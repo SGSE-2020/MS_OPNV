@@ -7,6 +7,7 @@ import Login from './views/Login.vue';
 import Schedule from './views/Schedule.vue';
 import Ticket from './views/Ticket.vue';
 import MyAccount from './views/MyAccount.vue';
+import Parkspace from './views/Parkspace.vue';
 
 Vue.use(Router);
 
@@ -46,6 +47,11 @@ const router = new Router({
             path: '/myaccount',
             name: 'MyAccount',
             component: MyAccount,
+        },
+        {
+            path: '/parkspace',
+            name: 'Parkspace',
+            component: Parkspace,
         },
     ],
 });

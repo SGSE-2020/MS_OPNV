@@ -12,7 +12,7 @@
             <ul>
                 <li>Innenstadt: 999</li>
                 <li>Stadio: 1232</li>
-                <li><a href="#">mehr...</a></li>
+                <router-link class="button" to="/parkspace">Alle Parkplätze</router-link>
             </ul>
         </div>
         <div class="card small">

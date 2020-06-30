@@ -5,78 +5,79 @@
             <div class="row">
                 <div id="center" class="col-sm-8">
                     <div v-if="this.user == true" id="ticket">
+                        <button class="primary" @click.prevent="getUserData()">Login</button>
                         <h1>Mein Konto</h1>
-                    <div>
-                        <table>
-                        <tr>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                        <tr>
-                            <td>Geschlecht</td>
-                            <td>{{this.userinfo.gender}}</td>
-                        </tr>
-                        <tr>
-                            <td>Vorname</td>
-                            <td>{{this.userinfo.firstName}}</td>
-                        </tr>
-                        <tr>
-                            <td>Nachname</td>
-                            <td>{{this.userinfo.lastName}}</td>
-                        </tr>
-                        <tr>
-                            <td>Nickname</td>
-                            <td>{{this.userinfo.nickName}}</td>
-                        </tr>
-                        <tr>
-                            <td>Email</td>
-                            <td>{{this.userinfo.email}}</td>
-                        </tr>
-                        <tr>
-                            <td>Geburtsdatum</td>
-                            <td>{{this.userinfo.birthDate}}</td>
-                        </tr>
-                        <tr>
-                            <td>Adresse</td>
-                            <td>
-                                {{this.userinfo.streetAddress}},
-                                {{this.userinfo.zipCode}}
-                                {{this.userinfo.city}}
-                                </td>
-                        </tr>
-                        </table>
-                    </div>
-                    <h1>Meine Tickets</h1>
-                    <div>
-                        <table style="width:100%">
-                        <tr>
-                            <th>Bereich</th>
-                            <th>Ticketart</th>
-                            <th>Gültig bis</th>
-                        </tr>
-                        <tr>
-                            <td>Bahn-4</td>
-                            <td>Tagesticket</td>
-                            <td>02.07.2020</td>
-                        </tr>
-                        </table>
-                    </div>
-                    <h1>Abglaufene Tickets</h1>
-                    <div>
-                        <table style="width:100%">
-                        <tr>
-                            <th>Bereich</th>
-                            <th>Ticketart</th>
-                            <th>Gültig bis</th>
-                        </tr>
-                        <tr>
-                            <td>Bahn-4</td>
-                            <td>Tagesticket</td>
-                            <td>02.07.2020</td>
-                        </tr>
-                        </table>
-                    </div>
-                    </div>
+                        <div>
+                            <table>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            <tr>
+                                <td>Geschlecht</td>
+                                <td>{{this.userinfo.gender}}</td>
+                            </tr>
+                            <tr>
+                                <td>Vorname</td>
+                                <td>{{this.userinfo.firstName}}</td>
+                            </tr>
+                            <tr>
+                                <td>Nachname</td>
+                                <td>{{this.userinfo.lastName}}</td>
+                            </tr>
+                            <tr>
+                                <td>Nickname</td>
+                                <td>{{this.userinfo.nickName}}</td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td>{{this.userinfo.email}}</td>
+                            </tr>
+                            <tr>
+                                <td>Geburtsdatum</td>
+                                <td>{{this.userinfo.birthDate}}</td>
+                            </tr>
+                            <tr>
+                                <td>Adresse</td>
+                                <td>
+                                    {{this.userinfo.streetAddress}},
+                                    {{this.userinfo.zipCode}}
+                                    {{this.userinfo.city}}
+                                    </td>
+                            </tr>
+                            </table>
+                        </div>
+                        <h1>Meine Tickets</h1>
+                        <div>
+                            <table style="width:100%">
+                            <tr>
+                                <th>Bereich</th>
+                                <th>Ticketart</th>
+                                <th>Gültig bis</th>
+                            </tr>
+                            <tr>
+                                <td>Bahn-4</td>
+                                <td>Tagesticket</td>
+                                <td>02.07.2020</td>
+                            </tr>
+                            </table>
+                        </div>
+                        <h1>Abglaufene Tickets</h1>
+                        <div>
+                            <table style="width:100%">
+                            <tr>
+                                <th>Bereich</th>
+                                <th>Ticketart</th>
+                                <th>Gültig bis</th>
+                            </tr>
+                            <tr>
+                                <td>Bahn-4</td>
+                                <td>Tagesticket</td>
+                                <td>02.07.2020</td>
+                            </tr>
+                            </table>
+                        </div>
+                        </div>
                     <div v-if="this.user == false">
                         Loggen Sie sich ein um diesen Bereich einsehen zu können!
                     </div>
@@ -98,7 +99,7 @@ export default {
     data() {
         return {
             user: '',
-            userinfo: '',
+            userinfo: {},
             error: [],
         };
     },
@@ -110,29 +111,32 @@ export default {
                 this.user = false;
             }
         });
-        let idToken = firebase.auth().currentUser.getIdToken(true);
-        axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
-            Token: idToken,
-        })
-        .then((response) => {
-            console.log(response);
-            this.userinfo = {
-                uid: response.uid,
-                gender: 1,
-                firstName: response.firstName,
-                lastName: response.lastName,
-                nickName: response.nickName,
-                email: response.email,
-                birthDate: response.birthDate,
-                streetAddress: response.streetAddress,
-                zipCode: response.zipCode,
-                city: response.city,
-                };
-        })
-        .catch((e) => {
-            this.error.push(e);
-            console.log('Fehler beim Daten holen');
-        });
+        firebase.auth().currentUser.getIdToken(true).then((idToken) => {
+                            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+                                Token: idToken,
+                            })
+                            .then((response) => {
+                                console.log(response);
+                                // this.userinfo = response;
+                                this.userinfo = {
+                                    uid: response.uid,
+                                    gender: response.gender,
+                                    firstName: response.firstName,
+                                    lastName: response.lastName,
+                                    nickName: response.nickName,
+                                    email: response.email,
+                                    birthDate: response.birthDate,
+                                    streetAddress: response.streetAddress,
+                                    zipCode: response.zipCode,
+                                    city: response.city,
+                                    };
+                            })
+                            .catch((e) => {
+                                this.error.push(e);
+                            });
+                        }).catch((error) => {
+                            this.error.push(e);
+                        });
     },
     components: {
         TheHeader,

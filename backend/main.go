@@ -131,6 +131,7 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
 	} else {
+		var spaces []parkplatz.UtilizationDetails
 		for {
 			res, err := utils.Recv()
 			if err == io.EOF {
@@ -140,12 +141,24 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
 			}
-			w.Write([]byte(fmt.Sprintf("{\"Name\": \"%s\"}", res.GetDisplayName())))
-			w.Write([]byte(fmt.Sprintf("{\"Total\": \"%d\"}", res.GetTotalSpots())))
-			w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%d\"}", res.GetUtilizedSpots())))
+			spaces = append(spaces, parkplatz.UtilizationDetails{
+				DisplayName:   res.GetDisplayName(),
+				TotalSpots:    res.GetTotalSpots(),
+				UtilizedSpots: res.GetUtilizedSpots(),
+			})
+			// w.Write([]byte(fmt.Sprintf("{\"Name\": \"%s\"}", res.GetDisplayName())))
+			// w.Write([]byte(fmt.Sprintf("{\"Total\": \"%d\"}", res.GetTotalSpots())))
+			// w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%d\"}", res.GetUtilizedSpots())))
 		}
-		w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat geklappt}"))
-		//w.Write([]byte(fmt.Sprintf("{\"Geld gebucht\": \"%s\",\"Geld gebucht\": \"%s\"}", bill_sum)))
+		// test if user exists
+		jsonData, err := json.Marshal(spaces)
+		if err != nil {
+			w.Write([]byte("{\"Response\": \"Fehler bei parsen von JSON-Objekt\"}"))
+			log.Println(err)
+		} else {
+			w.Write([]byte(string(jsonData)))
+		}
+
 	}
 	defer grpc_client.Close()
 }
