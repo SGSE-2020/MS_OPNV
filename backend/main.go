@@ -73,21 +73,47 @@ func init() {
 }
 
 func createDB(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to the API!")
 	if ConnectDB() {
 		var resultArea Area
 
-		if err := GetDB().Where("areatype = ?", "SB-Zone-1").First(&resultArea).Error; err != nil {
+		if err := GetDB().Where("area_type = ?", "SB-Zone-1").First(&resultArea).Error; err != nil {
 			fmt.Println(err)
-			GetDB().Create(&User{UId: "1234"})
-			GetDB().Create(&Area{AreaType: "SB-Zone-1", Price: 2.5})
-			GetDB().Create(&Area{AreaType: "SB-Zone-2", Price: 1.5})
-			GetDB().Create(&Area{AreaType: "SB-Zone-3", Price: 2.0})
-			GetDB().Create(&Area{AreaType: "B-Zone-1", Price: 1.5})
-			GetDB().Create(&Area{AreaType: "B-Zone-2", Price: 2.5})
-			GetDB().Create(&Area{AreaType: "B-Zone-3", Price: 2.0})
-			GetDB().Create(&Area{AreaType: "B-Zone-4", Price: 3.0})
-			fmt.Fprintf(w, "Die Daten wurden erstellt!")
+			if err := GetDB().Create(&User{UId: "1234"}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			}
+			if err := GetDB().Create(&Area{AreaType: "SB-Zone-1", Price: 2.5}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			}
+			if err := GetDB().Create(&Area{AreaType: "SB-Zone-2", Price: 1.5}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			}
+			if err := GetDB().Create(&Area{AreaType: "SB-Zone-3", Price: 2.0}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			}
+			if err := GetDB().Create(&Area{AreaType: "B-Zone-1", Price: 1.5}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			}
+			if err := GetDB().Create(&Area{AreaType: "B-Zone-2", Price: 2.5}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			}
+			if err := GetDB().Create(&Area{AreaType: "B-Zone-3", Price: 2.0}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			}
+			if err := GetDB().Create(&Area{AreaType: "B-Zone-4", Price: 3.0}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}"))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+			} else {
+				fmt.Fprintf(w, "Die Daten wurden erstellt!")
+				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}\""))
+				w.Write([]byte("{\"Response\": \"Und noch ein Zweites\"}\""))
+			}
 		} else {
 			fmt.Fprintf(w, "Die Daten existieren bereits!")
 		}
@@ -103,21 +129,20 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	utils, err := client.Utilization(ctx, &parkplatz.UtilizationRequest{ServiceName: "Test"})
 	if err != nil {
-		w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat nicht geklappt\"}"))
+		w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
 	} else {
 		for {
 			res, err := utils.Recv()
 			if err == io.EOF {
+				defer grpc_client.Close()
 				return
 			}
 			if err != nil {
-				log.Fatal("cannot receive response: ", err)
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}\"", err)))
 			}
-			w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat nicht geklappt\"}"))
-			log.Print("Name: ", res.GetDisplayName())
-			log.Print("Total: ", res.GetTotalSpots())
-			log.Print("Besetzt: ", res.GetUtilizedSpots())
-
+			w.Write([]byte(fmt.Sprintf("{\"Name\": \"%s\"}\"", res.GetDisplayName())))
+			w.Write([]byte(fmt.Sprintf("{\"Total\": \"%s\"}\"", res.GetTotalSpots())))
+			w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%s\"}\"", res.GetUtilizedSpots())))
 		}
 		w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat geklappt\"}"))
 		//w.Write([]byte(fmt.Sprintf("{\"Geld gebucht\": \"%s\",\"Geld gebucht\": \"%s\"}", bill_sum)))
@@ -153,6 +178,9 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 				var resultUser User
 				if err := GetDB().Where("UId = ?", userData.Uid).First(&resultUser).Error; err != nil {
 					GetDB().Create(&User{UId: string(userData.Uid)})
+					w.Write([]byte("{\"Response\": \"User wurde erstellt\"}"))
+				} else {
+					w.Write([]byte("{\"Response\": \"Der User existiert bereits\"}"))
 				}
 				defer GetDB().Close()
 				w.Write([]byte(string(jsonData)))
