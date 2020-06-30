@@ -1,3 +1,3 @@
 # MS_OPNV
 
-ci test
+grpc test
