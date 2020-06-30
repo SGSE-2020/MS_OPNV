@@ -138,13 +138,13 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if err != nil {
-				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}\"", err)))
+				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
 			}
-			w.Write([]byte(fmt.Sprintf("{\"Name\": \"%s\"}\"", res.GetDisplayName())))
-			w.Write([]byte(fmt.Sprintf("{\"Total\": \"%s\"}\"", res.GetTotalSpots())))
-			w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%s\"}\"", res.GetUtilizedSpots())))
+			w.Write([]byte(fmt.Sprintf("{\"Name\": \"%s\"}", res.GetDisplayName())))
+			w.Write([]byte(fmt.Sprintf("{\"Total\": \"%d\"}", res.GetTotalSpots())))
+			w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%d\"}", res.GetUtilizedSpots())))
 		}
-		w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat geklappt\"}"))
+		w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat geklappt}"))
 		//w.Write([]byte(fmt.Sprintf("{\"Geld gebucht\": \"%s\",\"Geld gebucht\": \"%s\"}", bill_sum)))
 	}
 	defer grpc_client.Close()
@@ -176,7 +176,7 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 			} else if ConnectDB() {
 				var resultUser User
-				if err := GetDB().Where("UId = ?", userData.Uid).First(&resultUser).Error; err != nil {
+				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultUser).Error; err != nil {
 					GetDB().Create(&User{UId: string(userData.Uid)})
 					w.Write([]byte("{\"Response\": \"User wurde erstellt\"}"))
 				} else {

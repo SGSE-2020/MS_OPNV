@@ -4,7 +4,8 @@
         <div id="container">
             <div class="row">
                 <div id="center" class="col-sm-8">
-                    <h1>Mein Konto</h1>
+                    <div v-if="this.user == true" id="ticket">
+                        <h1>Mein Konto</h1>
                     <div>
                         <table>
                         <tr>
@@ -75,6 +76,10 @@
                         </tr>
                         </table>
                     </div>
+                    </div>
+                    <div v-if="this.user == false">
+                        Loggen Sie sich ein um diesen Bereich einsehen zu können!
+                    </div>
                 </div>
                 <TheSidebar />
             </div>
@@ -101,16 +106,6 @@ export default {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 this.user = true;
-                let idToken = firebase.auth().currentUser.getIdToken(true);
-                axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
-                    Token: idToken,
-                })
-                .then((response) => {
-                    console.log('User Wurde Validiert');
-                })
-                .catch((e) => {
-                this.error.push(e);
-                });
             } else {
                 this.user = false;
             }
@@ -122,22 +117,21 @@ export default {
         .then((response) => {
             console.log(response);
             this.userinfo = {
-                uid: '6TbzcPavrSNdq1W1qAKqyfhhvxB2',
+                uid: response.uid,
                 gender: 1,
-                firstName: 'Max',
-                lastName: 'Muster',
-                nickName: 'mmuster',
-                email: 'exampleuser@test.de',
-                birthDate: 'Mon Jan 01 1990 00:00:00 GMT+0000 (Coordinated Universal Time)',
-                streetAddress: 'Beispielstraße 12',
-                zipCode: '12345',
-                city: 'Smart City',
-                image: 'data:image/png;base64,iVBORw0',
-                isActive: true,
+                firstName: response.firstName,
+                lastName: response.lastName,
+                nickName: response.nickName,
+                email: response.email,
+                birthDate: response.birthDate,
+                streetAddress: response.streetAddress,
+                zipCode: response.zipCode,
+                city: response.city,
                 };
         })
         .catch((e) => {
             this.error.push(e);
+            console.log('Fehler beim Daten holen');
         });
     },
     components: {
