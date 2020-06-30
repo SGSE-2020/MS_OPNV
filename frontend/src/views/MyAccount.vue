@@ -13,31 +13,35 @@
                         </tr>
                         <tr>
                             <td>Geschlecht</td>
-                            <td>1</td>
+                            <td>{{this.userinfo.gender}}</td>
                         </tr>
                         <tr>
                             <td>Vorname</td>
-                            <td>Max</td>
+                            <td>{{this.userinfo.firstName}}</td>
                         </tr>
                         <tr>
                             <td>Nachname</td>
-                            <td>Muster</td>
+                            <td>{{this.userinfo.lastName}}</td>
                         </tr>
                         <tr>
                             <td>Nickname</td>
-                            <td>mmuster</td>
+                            <td>{{this.userinfo.nickName}}</td>
                         </tr>
                         <tr>
                             <td>Email</td>
-                            <td>exampleuser@test.de</td>
+                            <td>{{this.userinfo.email}}</td>
                         </tr>
                         <tr>
                             <td>Geburtsdatum</td>
-                            <td>01. Januar 1990</td>
+                            <td>{{this.userinfo.birthDate}}</td>
                         </tr>
                         <tr>
                             <td>Adresse</td>
-                            <td>Beispielstraße 12, 12345 Smart City</td>
+                            <td>
+                                {{this.userinfo.streetAddress}},
+                                {{this.userinfo.zipCode}}
+                                {{this.userinfo.city}}
+                                </td>
                         </tr>
                         </table>
                     </div>
@@ -89,6 +93,7 @@ export default {
     data() {
         return {
             user: '',
+            userinfo: '',
             error: [],
         };
     },
@@ -100,7 +105,9 @@ export default {
                 axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
                     Token: idToken,
                 })
-                .then((response) => { console.log('User Wurde Validiert'); })
+                .then((response) => {
+                    console.log('User Wurde Validiert');
+                })
                 .catch((e) => {
                 this.error.push(e);
                 });
@@ -108,10 +115,37 @@ export default {
                 this.user = false;
             }
         });
+        let idToken = firebase.auth().currentUser.getIdToken(true);
+        axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+            Token: idToken,
+        })
+        .then((response) => {
+            console.log(response);
+            this.userinfo = {
+                uid: '6TbzcPavrSNdq1W1qAKqyfhhvxB2',
+                gender: 1,
+                firstName: 'Max',
+                lastName: 'Muster',
+                nickName: 'mmuster',
+                email: 'exampleuser@test.de',
+                birthDate: 'Mon Jan 01 1990 00:00:00 GMT+0000 (Coordinated Universal Time)',
+                streetAddress: 'Beispielstraße 12',
+                zipCode: '12345',
+                city: 'Smart City',
+                image: 'data:image/png;base64,iVBORw0',
+                isActive: true,
+                };
+        })
+        .catch((e) => {
+            this.error.push(e);
+        });
     },
     components: {
         TheHeader,
         TheSidebar,
     },
+    methods: {
+    },
+
 };
 </script>
