@@ -6,6 +6,7 @@ import Home from './views/Home.vue';
 import Login from './views/Login.vue';
 import Schedule from './views/Schedule.vue';
 import Ticket from './views/Ticket.vue';
+import MyAccount from './views/MyAccount.vue';
 
 Vue.use(Router);
 
@@ -40,6 +41,11 @@ const router = new Router({
             path: '/ticket',
             name: 'Ticket',
             component: Ticket,
+        },
+        {
+            path: '/myaccount',
+            name: 'MyAccount',
+            component: MyAccount,
         },
     ],
 });

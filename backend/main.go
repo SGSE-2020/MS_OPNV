@@ -3,12 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
-	user "main/internal/proto"
+	user "main/internal/buergerbuero"
+	parkplatz "main/internal/parkplatz"
+
+	//account "main/internal/bank"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -22,8 +27,9 @@ var USERNAME = os.Getenv("POSTGRES_USER")
 var PASSWORD = os.Getenv("POSTGRES_PASSWORD")
 var DBNAME = os.Getenv("POSTGRES_DB")
 var DB_HOST = os.Getenv("DB_HOST")
-
-var GRPC_HOST = "ms-buergerbuero"
+var GRPC_HOST_BB = "ms-buergerbuero"
+var GRPC_HOST_BANK = "ms-bank"
+var GRPC_HOST_PP = "ms-parkplatz"
 var API_PORT = "8080"
 var GRPC_PORT = "50051"
 
@@ -34,38 +40,29 @@ var grpc_client *grpc.ClientConn
 
 type User struct {
 	gorm.Model
-	UId   string `json:"uid"`
-	Token string `json:"token"`
+	UId string `json:"uId"`
 }
 
 type Area struct {
 	gorm.Model
-	Name     string `json:"name"`
-	AreaType string `json:"areaType"`
-	Price    int    `json:"price"`
+	AreaType string  `json:"areaType"`
+	Price    float32 `json:"price"`
 }
 
 type Ticket struct {
 	gorm.Model
-	AreaId       string `json:"areaId"`
-	Qrcode       string `json:"qrCode"`
-	Validitydate string `json:"validityDate"`
-	TicketType   string `json:"ticketType"`
+	UId          string    `json:"uId"`
+	AreaType     string    `json:"areaType"`
+	Qrcode       string    `json:"qrCode"`
+	Validitydate time.Time `json:"validityDate"`
+	TicketType   int       `json:"ticketType"`
 }
 
-type TaxiCompany struct {
+type BuyTicketRequest struct {
 	gorm.Model
-	Name       string `json:"name"`
-	Adress     string `json:"adress"`
-	Telenumber string `json:"telenumber"`
-}
-
-type TrafficInformation struct {
-	gorm.Model
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	StartDate   string `json:"startDate"`
-	EndDate     string `json:"endDate"`
+	UId        string `json:"uId"`
+	AreaType   string `json:"areaType"`
+	TicketType int    `json:"ticketType"`
 }
 
 func init() {
@@ -75,64 +72,149 @@ func init() {
 	}
 }
 
-func testPage(w http.ResponseWriter, r *http.Request) {
+func createDB(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the API!")
-	//	fmt.Println("Endpoint Hit: /api")
+	if ConnectDB() {
+		var resultArea Area
+
+		if err := GetDB().Where("areatype = ?", "SB-Zone-1").First(&resultArea).Error; err != nil {
+			fmt.Println(err)
+			GetDB().Create(&User{UId: "1234"})
+			GetDB().Create(&Area{AreaType: "SB-Zone-1", Price: 2.5})
+			GetDB().Create(&Area{AreaType: "SB-Zone-2", Price: 1.5})
+			GetDB().Create(&Area{AreaType: "SB-Zone-3", Price: 2.0})
+			GetDB().Create(&Area{AreaType: "B-Zone-1", Price: 1.5})
+			GetDB().Create(&Area{AreaType: "B-Zone-2", Price: 2.5})
+			GetDB().Create(&Area{AreaType: "B-Zone-3", Price: 2.0})
+			GetDB().Create(&Area{AreaType: "B-Zone-4", Price: 3.0})
+			fmt.Fprintf(w, "Die Daten wurden erstellt!")
+		} else {
+			fmt.Fprintf(w, "Die Daten existieren bereits!")
+		}
+		defer GetDB().Close()
+	}
 }
 
-// func validateUser(w http.ResponseWriter, r *http.Request) {
-// 	reqBody, _ := ioutil.ReadAll(r.Body)
-// 	var helloreq HelloReq
-// 	json.Unmarshal(reqBody, &helloreq)
-// 	json.NewEncoder(w).Encode(helloreq)
+func updateParkingspace(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
-// 	w.Header().Set("Content-Type", "application/json")
+	ConnectGRPC(GRPC_HOST_PP)
+	client := parkplatz.NewParkplatzClient(grpc_client)
+	ctx := context.Background()
+	utils, err := client.Utilization(ctx, &parkplatz.UtilizationRequest{ServiceName: "Test"})
+	if err != nil {
+		w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat nicht geklappt\"}"))
+	} else {
+		for {
+			res, err := utils.Recv()
+			if err == io.EOF {
+				return
+			}
+			if err != nil {
+				log.Fatal("cannot receive response: ", err)
+			}
+			w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat nicht geklappt\"}"))
+			log.Print("Name: ", res.GetDisplayName())
+			log.Print("Total: ", res.GetTotalSpots())
+			log.Print("Besetzt: ", res.GetUtilizedSpots())
 
-// 	ConnectGRPC()
-// 	client := parkplatzpb.NewParkplatzClient(grpc_client)
-// 	ctx := context.Background()
-// 	verifiedUser, err := client.Provide(ctx, &parkplatzpb.HelloRequest{Name: helloreq.Name})
-// 	if err != nil {
-// 		w.Write([]byte("{\"User ID\": \"Der gRPC Call Provide hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + "\"}"))
-// 	} else {
-// 		jsonData, err := json.Marshal(verifiedUser)
-// 		if err != nil {
-// 			log.Println(err)
-// 		}
-// 		w.Write([]byte(string(jsonData)))
-// 	}
-// }
+		}
+		w.Write([]byte("{\"Response\": \"Der gRPC Call Utilization hat geklappt\"}"))
+		//w.Write([]byte(fmt.Sprintf("{\"Geld gebucht\": \"%s\",\"Geld gebucht\": \"%s\"}", bill_sum)))
+	}
+	defer grpc_client.Close()
+}
 
 func validateUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var userA user.UserToken
-	json.Unmarshal(reqBody, &userA)
-	json.NewEncoder(w).Encode(userA)
+	var temp_user user.UserToken
+	json.Unmarshal(reqBody, &temp_user)
+	json.NewEncoder(w).Encode(temp_user)
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if ConnectGRPC() {
-		client := user.NewUserServiceClient(grpc_client)
-		ctx := context.Background()
-		verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: userA.Token})
+	ConnectGRPC(GRPC_HOST_BB)
+	client := user.NewUserServiceClient(grpc_client)
+	ctx := context.Background()
+	verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
+	if err != nil {
+		w.Write([]byte("{\"Response\": \"Der gRPC Call VerifyUser hat nicht geklappt\"}"))
+	} else {
+		userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
 		if err != nil {
-			w.Write([]byte("{\"User ID\": \"Der gRPC Call VerifyUser hat nicht geklappt, weil:" + grpc.ErrorDesc(err) + " \"}"))
+			w.Write([]byte("{\"Response\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
 		} else {
-			userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
+			// test if user exists
+			jsonData, err := json.Marshal(userData)
 			if err != nil {
-				w.Write([]byte("{\"User ID\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
-			} else {
-				jsonData, err := json.Marshal(userData)
-				if err != nil {
-					log.Println(err)
+				w.Write([]byte("{\"Response\": \"Fehler bei parsen von JSON-Objekt\"}"))
+				log.Println(err)
+			} else if ConnectDB() {
+				var resultUser User
+				if err := GetDB().Where("UId = ?", userData.Uid).First(&resultUser).Error; err != nil {
+					GetDB().Create(&User{UId: string(userData.Uid)})
 				}
+				defer GetDB().Close()
 				w.Write([]byte(string(jsonData)))
 			}
 		}
 	}
+	defer grpc_client.Close()
 }
 
-func getUsers(w http.ResponseWriter, r *http.Request) {
+func buyTicket(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var ticketReq BuyTicketRequest
+	json.Unmarshal(reqBody, &ticketReq)
+	json.NewEncoder(w).Encode(ticketReq)
+
+	if ConnectDB() {
+		var resultUser User
+
+		if err := GetDB().Where("uid = ?", ticketReq.UId).First(&resultUser).Error; err != nil {
+			w.Write([]byte("{\"Response\": \"false at Where\"}"))
+			fmt.Println(err)
+		} else {
+			var now = time.Now()
+			var valDate time.Time
+			var temp_area Area
+			var bill_sum float32
+			if err := GetDB().Where("area_type = ?", ticketReq.AreaType).First(&temp_area).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"false at Where Area\"}"))
+				fmt.Println(err)
+			} else {
+				if ticketReq.TicketType == 0 {
+					valDate = now.AddDate(0, 0, 1)
+					bill_sum = temp_area.Price
+				} else {
+					valDate = now.AddDate(0, 1, 0)
+					var bill_sum_temp = temp_area.Price * 0.2
+					bill_sum = bill_sum_temp * 30
+				}
+			}
+			if err := GetDB().Create(
+				&Ticket{
+					UId:          string(ticketReq.UId),
+					AreaType:     ticketReq.AreaType,
+					Qrcode:       "DummyQRCode",
+					Validitydate: valDate,
+					TicketType:   ticketReq.TicketType}).Error; err != nil {
+				w.Write([]byte("{\"Response\": \"false at Create ticket\"}"))
+			} else {
+				// ConnectGRPC(GRPC_HOST_BB)
+				// client := user.NewUserServiceClient(grpc_client)
+				// ctx := context.Background()
+				// verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
+				w.Write([]byte(fmt.Sprintf("{\"Geld gebucht\": \"%f\"}", bill_sum)))
+			}
+		}
+		defer GetDB().Close()
+	} else {
+		w.Write([]byte("{\"Response\": \"false\"}"))
+	}
+}
+
+func getUser(w http.ResponseWriter, r *http.Request) {
 	if ConnectDB() {
 		var resultUsers []User
 		GetDB().Find(&resultUsers)
@@ -146,16 +228,16 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Write([]byte("{\"Response\": \"Keine Verbindung zur Datenbank\"}"))
 	}
-
 }
 
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 
 	// active routes
-	myRouter.HandleFunc("/api", testPage)
-	myRouter.HandleFunc("/users", getUsers)
+	myRouter.HandleFunc("/db", createDB)
 	myRouter.HandleFunc("/user", validateUser).Methods("POST")
+	myRouter.HandleFunc("/buy", buyTicket).Methods("POST")
+	myRouter.HandleFunc("/parkspace", updateParkingspace)
 
 	handler := cors.Default().Handler(myRouter)
 	log.Fatal(http.ListenAndServe(":"+API_PORT, handler))
@@ -180,23 +262,24 @@ func ConnectDB() bool {
 	} else {
 		db = conn
 		if !dbInitFlag {
-			GetDB().Debug().AutoMigrate(&User{}) //Database migration
+			GetDB().Debug().AutoMigrate(&User{}, &Area{}, &Ticket{}) //Database migratio
 			dbInitFlag = true
 		}
 		return true
 	}
 }
 
-func ConnectGRPC() bool {
-	conn, err := grpc.Dial(
-		GRPC_HOST+":"+GRPC_PORT, grpc.WithInsecure())
-	if err != nil {
-		fmt.Print("Keine Verbindung zum grpc-Server")
-		fmt.Print(err)
-		return false
-	} else {
-		fmt.Println("Ich gehe hier trotzdem rein")
-		grpc_client = conn
-		return true
-	}
+func ConnectGRPC(host string) {
+	conn, _ := grpc.Dial(
+		host+":"+GRPC_PORT, grpc.WithInsecure())
+	grpc_client = conn
+	// if err != nil {
+	// 	fmt.Print("Keine Verbindung zum grpc-Server")
+	// 	fmt.Print(err)
+	// 	return false
+	// } else {
+	// 	fmt.Println("Ich gehe hier trotzdem rein")
+	// 	grpc_client = conn
+	// 	return true
+	// }
 }
