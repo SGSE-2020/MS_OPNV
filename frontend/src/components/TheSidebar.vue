@@ -10,8 +10,10 @@
         <div class="card small">
             <h3>Freie Parkplätze</h3>
             <ul>
-                <li>Innenstadt: 999</li>
-                <li>Stadio: 1232</li>
+                <li v-for="i in 2" :key="i">
+                    {{spaces[i - 1].DisplayName}}:
+                    {{spaces[i - 1].TotalSpots - spaces[i - 1].UtilizedSpots}}
+                    </li>
                 <router-link class="button" to="/parkspace">Alle Parkplätze</router-link>
             </ul>
         </div>
@@ -20,3 +22,33 @@
         </div>
     </div>
 </template>
+
+
+<script>
+import axios from 'axios';
+
+export default {
+    name: 'TheSidebar',
+    data() {
+        return {
+            spaces: [],
+            error: [],
+        };
+    },
+    created() {
+        axios.get(`${process.env.VUE_APP_BACKEND_HOST}/parkspace`)
+                            .then((response) => {
+                                // console.log(response);
+                                this.spaces = response.data;
+                            })
+                            .catch((e) => {
+                                this.error.push(e);
+                                console.log('Fehler beim Daten holen');
+                                console.log(e);
+                            });
+    },
+    methods: {
+    },
+
+};
+</script>

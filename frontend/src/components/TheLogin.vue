@@ -63,18 +63,18 @@ export default {
                         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
                             this.validateUser(idToken);
                         }).catch((error) => {
-                            console.log(error);
+                            // console.log(error);
                         });
                 }, (error) => {
-                    if (error.code === 'auth/invalid-email'
-                    || error.code === 'auth/wrong-password'
-                    || error.code === 'auth/user-not-found') {
-                        console.log('E-Mail oder Passwort falsch oder User existiert nicht');
-                    } else if (error.code === 'auth/user-disabled') {
-                        console.log('Dieser Nutzer ist deaktiviert');
-                    } else {
-                        console.log(error);
-                    }
+                    // if (error.code === 'auth/invalid-email'
+                    // || error.code === 'auth/wrong-password'
+                    // || error.code === 'auth/user-not-found') {
+                    //     console.log('E-Mail oder Passwort falsch oder User existiert nicht');
+                    // } else if (error.code === 'auth/user-disabled') {
+                    //     console.log('Dieser Nutzer ist deaktiviert');
+                    // } else {
+                    //     console.log(error);
+                    // }
                 });
             } else {
                 alert('Bitte Mail und Passwort eingeben');
@@ -83,9 +83,9 @@ export default {
         logoutUser() {
             firebase.auth().signOut().then(() => {
                 // Logout erfolgreich
-                console.log('Logout Erfoglreich!');
+                alert('Logout erfoglreich!');
             }, (error) => {
-                console.log('Logout fehlgeschlagen');
+                alert('Logout fehlgeschlagen!');
             });
         },
         validateUser(idToken) {

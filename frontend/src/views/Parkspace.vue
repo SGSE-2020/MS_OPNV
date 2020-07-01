@@ -9,15 +9,15 @@
                         <table>
                         <tr>
                             <th>Name</th>
+                            <th>Frei</th>
                             <th>Gesamt</th>
                             <th>Belegt</th>
-                            <th class="free">Frei</th>
                         </tr>
-                        <tr>
-                            <td>Test</td>
-                            <td>200</td>
-                            <td>100</td>
-                            <td>100</td>
+                        <tr v-for="space in spaces" :key="space.DisplayName">
+                            <td>{{space.DisplayName}}</td>
+                            <td class="free">{{space.TotalSpots - space.UtilizedSpots}}</td>
+                            <td>{{space.TotalSpots}}</td>
+                            <td>{{space.UtilizedSpots}}</td>
                         </tr>
                         </table>
                     </div>
@@ -37,14 +37,15 @@ export default {
     name: 'MyAccount',
     data() {
         return {
-            user: '',
+            spaces: [],
             error: [],
         };
     },
     created() {
         axios.get(`${process.env.VUE_APP_BACKEND_HOST}/parkspace`)
                             .then((response) => {
-                                console.log(response);
+                                // console.log(response);
+                                this.spaces = response.data;
                             })
                             .catch((e) => {
                                 this.error.push(e);

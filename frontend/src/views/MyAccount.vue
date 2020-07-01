@@ -119,18 +119,6 @@ export default {
                             .then((response) => {
                                 console.log(response);
                                 this.userinfo = response.data;
-                                // this.userinfo = {
-                                //     uid: response.uid,
-                                //     gender: response.gender,
-                                //     firstName: response.firstName,
-                                //     lastName: response.lastName,
-                                //     nickName: response.nickName,
-                                //     email: response.email,
-                                //     birthDate: response.birthDate,
-                                //     streetAddress: response.streetAddress,
-                                //     zipCode: response.zipCode,
-                                //     city: response.city,
-                                //     };
                             })
                             .catch((e) => {
                                 this.error.push(e);

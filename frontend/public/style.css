@@ -13,6 +13,11 @@ div #login {
     text-align: center;
 }
 
+tr .free {
+    color: green;
+    font-weight: 750;
+}
+
 
 
 /* MODEL Style*/
