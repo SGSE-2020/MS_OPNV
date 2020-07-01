@@ -239,7 +239,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 			var temp_area Area
 			var bill_sum float32
 			if err := GetDB().Where("area_type = ?", ticketReq.AreaType).First(&temp_area).Error; err != nil {
-				w.Write([]byte("{\"Response\": \"false at Where Area\"}"))
+				fmt.Println("false at Where Area")
 				fmt.Println(err)
 			} else {
 				if ticketReq.TicketType == 0 {
@@ -258,7 +258,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 					Qrcode:       "DummyQRCode",
 					Validitydate: valDate,
 					TicketType:   ticketReq.TicketType}).Error; err != nil {
-				w.Write([]byte("{\"Response\": \"false at Create ticket\"}"))
+				fmt.Println("false at Create Ticket")
 			} else {
 				ConnectGRPC(GRPC_HOST_BANK)
 				client := account.NewAccountServiceClient(grpc_client)
@@ -269,22 +269,23 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					fmt.Println("Der gRPC Call GetIban hat nicht geklappt")
 				} else {
-					w.Write([]byte(fmt.Sprintf("{\"bill\": \"%f\"}", bill_sum)))
-				}
-				message, err := client.Transfer(ctx, &account.Transfer{
-					UserId:    ticketReq.UId,
-					Iban:      acc.Iban,
-					Purpose:   "Ticket gekauft",
-					DestIban:  DEST_IBAN,
-					Amount:    fmt.Sprintf("%f", bill_sum),
-					StartDate: "",
-					Repeat:    "",
-				})
-				if err != nil {
-					fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
-					json.NewEncoder(w).Encode(message)
-				} else {
-					w.Write([]byte(fmt.Sprintf("{\"bill\": \"%f\"}", bill_sum)))
+					var temp_amount string
+					temp_amount = fmt.Sprintf("%f", bill_sum)
+					message, err := client.Transfer(ctx, &account.Transfer{
+						UserId:    ticketReq.UId,
+						Iban:      acc.Iban,
+						Purpose:   "Ticket gekauft",
+						DestIban:  DEST_IBAN,
+						Amount:    temp_amount,
+						StartDate: "",
+						Repeat:    "",
+					})
+					if err != nil {
+						fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
+						fmt.Println(message)
+					} else {
+						w.Write([]byte(fmt.Sprintf("{\"bill\": %f}", bill_sum)))
+					}
 				}
 			}
 		}

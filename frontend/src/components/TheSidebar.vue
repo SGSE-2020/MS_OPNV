@@ -11,8 +11,8 @@
             <h3>Freie Parkplätze</h3>
             <ul>
                 <li v-for="i in 5" :key="i">
-                    {{spaces[i - 1].DisplayName}}:
-                    {{(spaces[i - 1].TotalSpots) - (spaces[i - 1].UtilizedSpots)}}
+                    {{spaces_side[i - 1].DisplayName}}:
+                    {{(spaces_side[i - 1].TotalSpots) - (spaces_side[i - 1].UtilizedSpots)}}
                 </li>
                 <router-link class="button" to="/parkspace">Alle Parkplätze</router-link>
             </ul>
@@ -31,14 +31,14 @@ export default {
     name: 'TheSidebar',
     data() {
         return {
-            spaces: [],
+            spaces_side: [],
             error: [],
         };
     },
     created() {
         axios.get(`${process.env.VUE_APP_BACKEND_HOST}/fiveparkspaces`)
                             .then((response) => {
-                                this.spaces = response.data;
+                                this.spaces_side = response.data;
                             })
                             .catch((e) => {
                                 this.error.push(e);
