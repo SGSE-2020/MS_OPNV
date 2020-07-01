@@ -27,7 +27,7 @@
                         <figure>
                             <img
                                 id="busImg"
-                                src="../assets/Bus.jpg"
+                                src="../assets/Bus.png"
                                 style="width: 300px"
                                 alt="Busfahrplan der Smart City"
                                 @click.prevent="showModal('busImg')"

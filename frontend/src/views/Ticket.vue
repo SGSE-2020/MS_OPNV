@@ -79,11 +79,6 @@ export default {
                 this.user = false;
             }
         });
-        firebase.auth().currentUser.getIdToken(true).then((idToken) => {
-                            this.validateUser(idToken);
-                        }).catch((error) => {
-                            console.log(error);
-                        });
     },
     methods: {
         buy() {
@@ -93,27 +88,30 @@ export default {
             } else {
                 temptType = 1;
             }
-            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
-                UId: this.completeUser.uid,
-                AreaType: this.area,
-                TicketType: temptType,
-                })
-                .then((response) => {
-                    console.log(response);
-                })
-                .catch((e) => {
-                    console.log(e);
+            firebase.auth().currentUser.getIdToken(true).then((idToken) => {
+                axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+                    Token: idToken,
+                    })
+                    .then((response) => { 
+                        axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
+                            UId: response.data.uid,
+                            AreaType: this.area,
+                            TicketType: temptType,
+                            })
+                            .then((response) => {
+                                console.log(response);
+                            })
+                            .catch((e) => {
+                                console.log(e);
+                                this.error.push(e);
+                            });
+                    })
+                    .catch((e) => {
                     this.error.push(e);
-                });
-        },
-        validateUser(idToken) {
-            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
-                Token: idToken,
-                })
-                .then((response) => { this.completeUser = response.data; })
-                .catch((e) => {
-                this.error.push(e);
-                });
+                    });
+            }).catch((error) => {
+                console.log(error);
+            });
         },
     },
 };
