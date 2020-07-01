@@ -128,10 +128,11 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 	client := parkplatz.NewParkplatzClient(grpc_client)
 	ctx := context.Background()
 	utils, err := client.Utilization(ctx, &parkplatz.UtilizationRequest{ServiceName: "Test"})
+	type Spaces []parkplatz.UtilizationDetails
+	var spaces Spaces
 	if err != nil {
-		w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+		json.NewEncoder(w).Encode(err)
 	} else {
-		var spaces []parkplatz.UtilizationDetails
 		for {
 			res, err := utils.Recv()
 			if err == io.EOF {
@@ -139,7 +140,7 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if err != nil {
-				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
+				json.NewEncoder(w).Encode(err)
 			}
 			spaces = append(spaces, parkplatz.UtilizationDetails{
 				DisplayName:   res.GetDisplayName(),
@@ -150,11 +151,8 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 			// w.Write([]byte(fmt.Sprintf("{\"Total\": \"%d\"}", res.GetTotalSpots())))
 			// w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%d\"}", res.GetUtilizedSpots())))
 		}
+		json.NewEncoder(w).Encode(spaces)
 
-		err := json.NewEncoder(w).Encode(spaces)
-		if err != nil {
-			fmt.Println(err)
-		}
 	}
 	defer grpc_client.Close()
 }
