@@ -135,7 +135,7 @@ export default {
                                 this.error.push(e);
                             });
                         }).catch((error) => {
-                            this.error.push(e);
+                            this.error.push(error);
                         });
     },
     components: {
