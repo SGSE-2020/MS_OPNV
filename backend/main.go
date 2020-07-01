@@ -150,15 +150,11 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 			// w.Write([]byte(fmt.Sprintf("{\"Total\": \"%d\"}", res.GetTotalSpots())))
 			// w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%d\"}", res.GetUtilizedSpots())))
 		}
-		// test if user exists
-		jsonData, err := json.Marshal(spaces)
-		if err != nil {
-			w.Write([]byte("{\"Response\": \"Fehler bei parsen von JSON-Objekt\"}"))
-			log.Println(err)
-		} else {
-			w.Write([]byte(string(jsonData)))
-		}
 
+		err := json.NewEncoder(w).Encode(spaces)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	defer grpc_client.Close()
 }
@@ -166,37 +162,34 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 func validateUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	var temp_user user.UserToken
+
 	json.Unmarshal(reqBody, &temp_user)
-	json.NewEncoder(w).Encode(temp_user)
 
 	w.Header().Set("Content-Type", "application/json")
-
 	ConnectGRPC(GRPC_HOST_BB)
 	client := user.NewUserServiceClient(grpc_client)
 	ctx := context.Background()
 	verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
 	if err != nil {
-		w.Write([]byte("{\"Response\": \"Der gRPC Call VerifyUser hat nicht geklappt\"}"))
+		fmt.Println("Der gRPC Call VerifyUser hat nicht geklappt")
 	} else {
 		userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
 		if err != nil {
-			w.Write([]byte("{\"Response\": \"Der gRPC Call GetUser hat nicht geklappt\"}"))
+			fmt.Println("Der gRPC Call GetUser hat nicht geklappt")
 		} else {
 			// test if user exists
-			jsonData, err := json.Marshal(userData)
+			err := json.NewEncoder(w).Encode(userData)
 			if err != nil {
-				w.Write([]byte("{\"Response\": \"Fehler bei parsen von JSON-Objekt\"}"))
-				log.Println(err)
+				fmt.Println(err)
 			} else if ConnectDB() {
 				var resultUser User
 				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultUser).Error; err != nil {
 					GetDB().Create(&User{UId: string(userData.Uid)})
-					w.Write([]byte("{\"Response\": \"User wurde erstellt\"}"))
+					fmt.Println("User wurde erstellt")
 				} else {
-					w.Write([]byte("{\"Response\": \"Der User existiert bereits\"}"))
+					fmt.Println("Der User existiert bereits")
 				}
 				defer GetDB().Close()
-				w.Write([]byte(string(jsonData)))
 			}
 		}
 	}

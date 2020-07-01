@@ -61,8 +61,6 @@ export default {
                 firebase.auth().signInWithEmailAndPassword(this.email,
                     this.password).then((user) => {
                         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
-                            console.log(firebase.auth().currentUser.email);
-                            console.log(idToken);
                             this.validateUser(idToken);
                         }).catch((error) => {
                             console.log(error);
@@ -94,7 +92,7 @@ export default {
             axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
                 Token: idToken,
                 })
-                .then((response) => { console.log('User Wurde Validiert'); })
+                .then((response) => { })
                 .catch((e) => {
                 this.error.push(e);
                 });
