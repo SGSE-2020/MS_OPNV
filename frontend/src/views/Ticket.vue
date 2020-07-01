@@ -92,9 +92,9 @@ export default {
                 axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
                     Token: idToken,
                     })
-                    .then((response) => { 
+                    .then((res) => {
                         axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
-                            UId: response.data.uid,
+                            UId: res.data.uid,
                             AreaType: this.area,
                             TicketType: temptType,
                             })
