@@ -52,8 +52,10 @@ export default {
         return {
             tType: '',
             area: '',
+            user: '',
             userToken: '',
             userId: '',
+            error: [],
         };
     },
     created() {
@@ -67,7 +69,7 @@ export default {
         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
                             this.userToken = idToken;
                         }).catch((error) => {
-                            // console.log(error);
+                            console.log(error);
                         });
         axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
                 Token: this.userToken,
@@ -76,9 +78,13 @@ export default {
                     this.userId = response.data.userId;
                 })
                 .catch((e) => {
+                    console.log(e);
                 this.error.push(e);
                 });
-        axios.get(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
+    },
+    methods: {
+        buy() {
+            axios.get(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
                 // UId: this.userId,
                 UId: '1234',
                 AreaType: 'SB-Zone-1',
@@ -88,10 +94,10 @@ export default {
                     console.log(response);
                 })
                 .catch((e) => {
+                    console.log(e);
                     this.error.push(e);
                 });
-    },
-    methods: {
+        },
     },
 };
 </script>

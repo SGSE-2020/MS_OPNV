@@ -12,8 +12,8 @@
             <ul>
                 <li v-for="i in 5" :key="i">
                     {{spaces[i - 1].DisplayName}}:
-                    {{spaces[i - 1].TotalSpots - spaces[i - 1].UtilizedSpots}}
-                    </li>
+                    {{(spaces[i - 1].TotalSpots) - (spaces[i - 1].UtilizedSpots)}}
+                </li>
                 <router-link class="button" to="/parkspace">Alle Parkplätze</router-link>
             </ul>
         </div>
