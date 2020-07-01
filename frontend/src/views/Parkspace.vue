@@ -22,7 +22,6 @@
                         </table>
                     </div>
                 </div>
-                <TheSidebar />
             </div>
         </div>
     </div>
@@ -31,7 +30,6 @@
 <script>
 import axios from 'axios';
 import TheHeader from '../components/TheHeader.vue';
-import TheSidebar from '../components/TheSidebar.vue';
 
 export default {
     name: 'MyAccount',
@@ -52,7 +50,6 @@ export default {
     },
     components: {
         TheHeader,
-        TheSidebar,
     },
     methods: {
     },

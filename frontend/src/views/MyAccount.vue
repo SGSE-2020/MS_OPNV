@@ -5,7 +5,6 @@
             <div class="row">
                 <div id="center" class="col-sm-8">
                     <div v-if="this.user == true" id="ticket">
-                        <button class="primary" @click.prevent="getUserData()">Login</button>
                         <h1>Mein Konto</h1>
                         <div>
                             <table>
@@ -83,7 +82,7 @@
                         Loggen Sie sich ein um diesen Bereich einsehen zu können!
                     </div>
                 </div>
-                <TheSidebar />
+                <!--<TheSidebar />-->
             </div>
         </div>
     </div>
@@ -93,7 +92,7 @@
 import firebase from 'firebase';
 import axios from 'axios';
 import TheHeader from '../components/TheHeader.vue';
-import TheSidebar from '../components/TheSidebar.vue';
+// import TheSidebar from '../components/TheSidebar.vue';
 
 export default {
     name: 'MyAccount',
@@ -128,7 +127,7 @@ export default {
     },
     components: {
         TheHeader,
-        TheSidebar,
+        // TheSidebar,
     },
     methods: {
     },

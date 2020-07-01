@@ -84,7 +84,7 @@ export default {
     },
     methods: {
         buy() {
-            axios.get(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
+            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
                 // UId: this.userId,
                 UId: '1234',
                 AreaType: 'SB-Zone-1',
