@@ -53,8 +53,7 @@ export default {
             tType: '',
             area: '',
             user: '',
-            userToken: '',
-            userId: '',
+            completeUser: {},
             error: [],
             selected: '',
             areas: [
@@ -81,20 +80,10 @@ export default {
             }
         });
         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
-                            this.userToken = idToken;
+                            this.validateUser(idToken);
                         }).catch((error) => {
                             console.log(error);
                         });
-        axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
-                Token: this.userToken,
-                })
-                .then((response) => {
-                    this.userId = response.data.userId;
-                })
-                .catch((e) => {
-                    console.log(e);
-                this.error.push(e);
-                });
     },
     methods: {
         buy() {
@@ -105,8 +94,7 @@ export default {
                 temptType = 1;
             }
             axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
-                // UId: this.userId,
-                UId: this.userId,
+                UId: this.completeUser.uid,
                 AreaType: this.area,
                 TicketType: temptType,
                 })
@@ -116,6 +104,15 @@ export default {
                 .catch((e) => {
                     console.log(e);
                     this.error.push(e);
+                });
+        },
+        validateUser(idToken) {
+            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+                Token: idToken,
+                })
+                .then((response) => { this.completeUser = response.data; })
+                .catch((e) => {
+                this.error.push(e);
                 });
         },
     },

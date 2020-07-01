@@ -223,37 +223,22 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 
 func getTickets(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var temp_user user.UserToken
+	var temp_user user.UserId
 
 	json.Unmarshal(reqBody, &temp_user)
-
 	w.Header().Set("Content-Type", "application/json")
-	ConnectGRPC(GRPC_HOST_BB)
-	client := user.NewUserServiceClient(grpc_client)
-	ctx := context.Background()
-	verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
-	if err != nil {
-		fmt.Println("Der gRPC Call VerifyUser hat nicht geklappt")
-	} else {
-		userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
-		if err != nil {
-			fmt.Println("Der gRPC Call GetUser hat nicht geklappt")
-		} else {
-			// test if user exists
 
-			if ConnectDB() {
-				var resultTickets []Ticket
-				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultTickets).Error; err != nil {
-					json.NewEncoder(w).Encode(resultTickets)
-				} else {
-					fmt.Println("Keine Tickets gefunden")
-					w.Write([]byte("{\"Response\": \"Keine Tickets gefunden\"}"))
-				}
-				defer GetDB().Close()
-			}
+	fmt.Println(temp_user.Uid)
+	if ConnectDB() {
+		var resultTickets []Ticket
+		if err := GetDB().Where("uid = ?", temp_user.Uid).First(&resultTickets).Error; err != nil {
+			json.NewEncoder(w).Encode(resultTickets)
+		} else {
+			fmt.Println("Keine Tickets gefunden")
+			w.Write([]byte("{\"Response\": \"Keine Tickets gefunden\"}"))
 		}
+		defer GetDB().Close()
 	}
-	defer grpc_client.Close()
 }
 
 func buyTicket(w http.ResponseWriter, r *http.Request) {
@@ -288,7 +273,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 			}
 			if err := GetDB().Create(
 				&Ticket{
-					UId:          string(ticketReq.UId),
+					UId:          ticketReq.UId,
 					AreaType:     ticketReq.AreaType,
 					Qrcode:       "DummyQRCode",
 					Validitydate: valDate,

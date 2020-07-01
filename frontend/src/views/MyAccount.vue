@@ -99,7 +99,7 @@ export default {
     data() {
         return {
             user: '',
-            myToken: '',
+            completeUser: {},
             userinfo: {},
             error: [],
         };
@@ -113,21 +113,12 @@ export default {
             }
         });
         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
-                            this.myToken = idToken;
-                            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
-                                Token: idToken,
-                            })
-                            .then((response) => {
-                                this.userinfo = response.data;
-                            })
-                            .catch((e) => {
-                                this.error.push(e);
-                            });
+                            this.validateUser(idToken);
                         }).catch((error) => {
-                            this.error.push(error);
+                            console.log(error);
                         });
         axios.post(`${process.env.VUE_APP_BACKEND_HOST}/ticket`, {
-                Token: this.myToken,
+                Uid: this.completeUser.uid,
                 })
                 .then((response) => {
                     console.log(response);
@@ -142,6 +133,15 @@ export default {
         // TheSidebar,
     },
     methods: {
+        validateUser(idToken) {
+            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+                Token: idToken,
+                })
+                .then((response) => { this.completeUser = response.data; })
+                .catch((e) => {
+                this.error.push(e);
+                });
+        },
     },
 
 };
