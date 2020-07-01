@@ -99,6 +99,7 @@ export default {
     data() {
         return {
             user: '',
+            myToken: '',
             userinfo: {},
             error: [],
         };
@@ -112,6 +113,7 @@ export default {
             }
         });
         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
+                            this.myToken = idToken;
                             axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
                                 Token: idToken,
                             })
@@ -124,6 +126,16 @@ export default {
                         }).catch((error) => {
                             this.error.push(error);
                         });
+        axios.post(`${process.env.VUE_APP_BACKEND_HOST}/ticket`, {
+                Token: this.myToken,
+                })
+                .then((response) => {
+                    console.log(response);
+                })
+                .catch((e) => {
+                    console.log(e);
+                    this.error.push(e);
+                });
     },
     components: {
         TheHeader,

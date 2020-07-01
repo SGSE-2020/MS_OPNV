@@ -9,17 +9,17 @@
                             <fieldset>
                                 <legend>Tickets kaufen</legend>
                                 <label for="area">Bereich</label>
-                                <select name="area" id="area">
-                                    <option value="0">Bereich 1</option>
-                                    <option value="1">Bereich 2</option>
-                                    <option value="2">Bereich 3</option>
-                                    <option value="3">Bereich 4</option>
+                                <select v-model="area">
+                                    <option v-for="a in areas" :key="a.name">
+                                        {{ a.name }}
+                                    </option>
                                 </select>
                                 <br><br>
                                 <label for="tType">Tickettyp</label>
-                                <select name="tType" id="tType">
-                                    <option value="0">Tagesticket</option>
-                                    <option value="1">Monatsticket</option>
+                                <select v-model="tType">
+                                    <option v-for="tt in tTypes" :key="tt.name">
+                                        {{ tt.name }}
+                                    </option>
                                 </select>
                                 <br><br>
                                 <button class="primary" @click.prevent="buy()">Kaufen</button>
@@ -56,6 +56,20 @@ export default {
             userToken: '',
             userId: '',
             error: [],
+            selected: '',
+            areas: [
+                { id: 1, name: 'SB-Zone-1' },
+                { id: 2, name: 'SB-Zone-2' },
+                { id: 3, name: 'SB-Zone-3' },
+                { id: 4, name: 'B-Zone-1' },
+                { id: 5, name: 'B-Zone-2' },
+                { id: 6, name: 'B-Zone-3' },
+                { id: 7, name: 'B-Zone-4' },
+            ],
+            tTypes: [
+                { id: 1, name: 'Tagesticket' },
+                { id: 2, name: 'Monatsticket' },
+            ],
         };
     },
     created() {
@@ -84,11 +98,17 @@ export default {
     },
     methods: {
         buy() {
+            let temptType;
+            if (this.tType === 'Tagesticket') {
+                temptType = 0;
+            } else {
+                temptType = 1;
+            }
             axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
                 // UId: this.userId,
-                UId: '1234',
-                AreaType: 'SB-Zone-1',
-                TicketType: 0,
+                UId: this.userId,
+                AreaType: this.area,
+                TicketType: temptType,
                 })
                 .then((response) => {
                     console.log(response);

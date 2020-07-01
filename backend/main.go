@@ -221,6 +221,41 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 	defer grpc_client.Close()
 }
 
+func getTickets(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var temp_user user.UserToken
+
+	json.Unmarshal(reqBody, &temp_user)
+
+	w.Header().Set("Content-Type", "application/json")
+	ConnectGRPC(GRPC_HOST_BB)
+	client := user.NewUserServiceClient(grpc_client)
+	ctx := context.Background()
+	verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
+	if err != nil {
+		fmt.Println("Der gRPC Call VerifyUser hat nicht geklappt")
+	} else {
+		userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
+		if err != nil {
+			fmt.Println("Der gRPC Call GetUser hat nicht geklappt")
+		} else {
+			// test if user exists
+
+			if ConnectDB() {
+				var resultTickets []Ticket
+				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultTickets).Error; err != nil {
+					json.NewEncoder(w).Encode(resultTickets)
+				} else {
+					fmt.Println("Keine Tickets gefunden")
+					w.Write([]byte("{\"Response\": \"Keine Tickets gefunden\"}"))
+				}
+				defer GetDB().Close()
+			}
+		}
+	}
+	defer grpc_client.Close()
+}
+
 func buyTicket(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	var ticketReq BuyTicketRequest
@@ -269,16 +304,15 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					fmt.Println("Der gRPC Call GetIban hat nicht geklappt")
 				} else {
+					fmt.Println(acc.Iban)
 					var temp_amount string
 					temp_amount = fmt.Sprintf("%f", bill_sum)
 					message, err := client.Transfer(ctx, &account.Transfer{
-						UserId:    ticketReq.UId,
-						Iban:      acc.Iban,
-						Purpose:   "Ticket gekauft",
-						DestIban:  DEST_IBAN,
-						Amount:    temp_amount,
-						StartDate: "",
-						Repeat:    "",
+						UserId:   ticketReq.UId,
+						Iban:     acc.Iban,
+						Purpose:  "Ticket gekauft",
+						DestIban: DEST_IBAN,
+						Amount:   temp_amount,
 					})
 					if err != nil {
 						fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
@@ -321,6 +355,7 @@ func handleRequests() {
 	myRouter.HandleFunc("/buy", buyTicket).Methods("POST")
 	myRouter.HandleFunc("/parkspace", updateParkingspace)
 	myRouter.HandleFunc("/fiveparkspaces", updateParkingspace)
+	myRouter.HandleFunc("/ticket", getTickets).Methods("POST")
 
 	handler := cors.Default().Handler(myRouter)
 	log.Fatal(http.ListenAndServe(":"+API_PORT, handler))
