@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -132,11 +133,27 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 	var spaces Spaces
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
+		w.Write([]byte(fmt.Sprintf("[")))
+		for i := 0; i < 10; i++ {
+			w.Write([]byte(fmt.Sprintf("{")))
+			w.Write([]byte(fmt.Sprintf("\"DisplayName\": \"Displayname %d\",", i)))
+			w.Write([]byte(fmt.Sprintf("\"TotalSpots\": \"%d\",", rand.Intn(100))))
+			w.Write([]byte(fmt.Sprintf("\"UtilizedSpots\": \"%d\"", rand.Intn(100))))
+
+			if i == 9 {
+				w.Write([]byte(fmt.Sprintf("}]")))
+			} else {
+				w.Write([]byte(fmt.Sprintf("},")))
+			}
+		}
 	} else {
+		w.Write([]byte(fmt.Sprintf("[")))
 		for {
+			w.Write([]byte(fmt.Sprintf("{")))
 			res, err := utils.Recv()
 			if err == io.EOF {
 				defer grpc_client.Close()
+				w.Write([]byte(fmt.Sprintf("}]")))
 				return
 			}
 			if err != nil {
@@ -147,11 +164,12 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 				TotalSpots:    res.GetTotalSpots(),
 				UtilizedSpots: res.GetUtilizedSpots(),
 			})
-			// w.Write([]byte(fmt.Sprintf("{\"Name\": \"%s\"}", res.GetDisplayName())))
-			// w.Write([]byte(fmt.Sprintf("{\"Total\": \"%d\"}", res.GetTotalSpots())))
-			// w.Write([]byte(fmt.Sprintf("{\"Besetz\": \"%d\"}", res.GetUtilizedSpots())))
+			w.Write([]byte(fmt.Sprintf("\"DisplayName\": \"%s\",", res.GetDisplayName())))
+			w.Write([]byte(fmt.Sprintf("\"TotalSpots\": %d,", res.GetTotalSpots())))
+			w.Write([]byte(fmt.Sprintf("\"UtilizedSpots\": %d", res.GetUtilizedSpots())))
+			w.Write([]byte(fmt.Sprintf("},")))
 		}
-		json.NewEncoder(w).Encode(spaces)
+		//json.NewEncoder(w).Encode(spaces)
 
 	}
 	defer grpc_client.Close()

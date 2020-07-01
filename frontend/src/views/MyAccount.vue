@@ -15,7 +15,8 @@
                             </tr>
                             <tr>
                                 <td>Geschlecht</td>
-                                <td>{{this.userinfo.gender}}</td>
+                                <td v-if="this.userinfo.gender == 0">weiblich</td>
+                                <td v-if="this.userinfo.gender == 1">männlich</td>
                             </tr>
                             <tr>
                                 <td>Vorname</td>
