@@ -84,7 +84,7 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/postgresql/data/
           name: db
-          subPath: opnv-db
+          subPath: opnv-db-v1
       restartPolicy: Always
       volumes:
       - name: db

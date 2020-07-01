@@ -231,7 +231,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 		var resultUser User
 
 		if err := GetDB().Where("uid = ?", ticketReq.UId).First(&resultUser).Error; err != nil {
-			w.Write([]byte("{\"Response\": \"false at Where\"}"))
+			w.Write([]byte("{\"Response\": \"false at Where Uid\"}"))
 			fmt.Println(err)
 		} else {
 			var now = time.Now()
@@ -260,7 +260,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 					TicketType:   ticketReq.TicketType}).Error; err != nil {
 				w.Write([]byte("{\"Response\": \"false at Create ticket\"}"))
 			} else {
-				ConnectGRPC(GRPC_HOST_BB)
+				ConnectGRPC(GRPC_HOST_BANK)
 				client := account.NewAccountServiceClient(grpc_client)
 				ctx := context.Background()
 				acc, err := client.GetIban(ctx, &account.UserId{
