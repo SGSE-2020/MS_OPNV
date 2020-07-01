@@ -16,12 +16,6 @@
                                     <option value="3">Bereich 4</option>
                                 </select>
                                 <br><br>
-                                <label for="vType">Verkehrsmittel</label>
-                                <select name="vType" id="vType">
-                                    <option value="0">Bus</option>
-                                    <option value="1">Bahn</option>
-                                </select>
-                                <br><br>
                                 <label for="tType">Tickettyp</label>
                                 <select name="tType" id="tType">
                                     <option value="0">Tagesticket</option>
@@ -56,10 +50,10 @@ export default {
     },
     data() {
         return {
-            vType: '',
             tType: '',
             area: '',
-            user: '',
+            userToken: '',
+            userId: '',
         };
     },
     created() {
@@ -70,30 +64,34 @@ export default {
                 this.user = false;
             }
         });
+        firebase.auth().currentUser.getIdToken(true).then((idToken) => {
+                            this.userToken = idToken;
+                        }).catch((error) => {
+                            // console.log(error);
+                        });
+        axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+                Token: this.userToken,
+                })
+                .then((response) => {
+                    this.userId = response.data.userId;
+                })
+                .catch((e) => {
+                this.error.push(e);
+                });
+        axios.get(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
+                // UId: this.userId,
+                UId: '1234',
+                AreaType: 'SB-Zone-1',
+                TicketType: 0,
+                })
+                .then((response) => {
+                    console.log(response);
+                })
+                .catch((e) => {
+                    this.error.push(e);
+                });
     },
     methods: {
-        buy() {
-
-        },
-        // testBackendCall() {
-        //     axios.get(`${process.env.VUE_APP_BACKEND_HOST}/api`)
-        //         .then((response) => {
-        //             console.log(response.data);
-        //             this.text = response.data;
-        //         })
-        //         .catch((e) => {
-        //         this.errors.push(e);
-        //         });
-        // },
-        // testGetUsersCall() {
-        //     axios.get(`${process.env.VUE_APP_BACKEND_HOST}/users`)
-        //         .then((response) => {
-        //             this.users = response.data;
-        //         })
-        //         .catch((e) => {
-        //             this.errors.push(e);
-        //         });
-        // },
     },
 };
 </script>

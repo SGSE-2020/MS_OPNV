@@ -117,7 +117,6 @@ export default {
                                 Token: idToken,
                             })
                             .then((response) => {
-                                console.log(response);
                                 this.userinfo = response.data;
                             })
                             .catch((e) => {

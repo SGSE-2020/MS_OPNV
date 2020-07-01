@@ -6,15 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"time"
 
+	account "main/internal/bank"
 	user "main/internal/buergerbuero"
 	parkplatz "main/internal/parkplatz"
-
-	//account "main/internal/bank"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -33,6 +31,7 @@ var GRPC_HOST_BANK = "ms-bank"
 var GRPC_HOST_PP = "ms-parkplatz"
 var API_PORT = "8080"
 var GRPC_PORT = "50051"
+var DEST_IBAN = "DE 23 1520 0000 1812 8252 34"
 
 var db *gorm.DB //database
 var dbInitFlag bool = false
@@ -129,23 +128,8 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 	client := parkplatz.NewParkplatzClient(grpc_client)
 	ctx := context.Background()
 	utils, err := client.Utilization(ctx, &parkplatz.UtilizationRequest{ServiceName: "Test"})
-	type Spaces []parkplatz.UtilizationDetails
-	var spaces Spaces
 	if err != nil {
 		json.NewEncoder(w).Encode(err)
-		w.Write([]byte(fmt.Sprintf("[")))
-		for i := 0; i < 10; i++ {
-			w.Write([]byte(fmt.Sprintf("{")))
-			w.Write([]byte(fmt.Sprintf("\"DisplayName\": \"Displayname %d\",", i)))
-			w.Write([]byte(fmt.Sprintf("\"TotalSpots\": \"%d\",", rand.Intn(100))))
-			w.Write([]byte(fmt.Sprintf("\"UtilizedSpots\": \"%d\"", rand.Intn(100))))
-
-			if i == 9 {
-				w.Write([]byte(fmt.Sprintf("}]")))
-			} else {
-				w.Write([]byte(fmt.Sprintf("},")))
-			}
-		}
 	} else {
 		w.Write([]byte(fmt.Sprintf("[")))
 		for {
@@ -159,18 +143,43 @@ func updateParkingspace(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				json.NewEncoder(w).Encode(err)
 			}
-			spaces = append(spaces, parkplatz.UtilizationDetails{
-				DisplayName:   res.GetDisplayName(),
-				TotalSpots:    res.GetTotalSpots(),
-				UtilizedSpots: res.GetUtilizedSpots(),
-			})
 			w.Write([]byte(fmt.Sprintf("\"DisplayName\": \"%s\",", res.GetDisplayName())))
 			w.Write([]byte(fmt.Sprintf("\"TotalSpots\": %d,", res.GetTotalSpots())))
 			w.Write([]byte(fmt.Sprintf("\"UtilizedSpots\": %d", res.GetUtilizedSpots())))
 			w.Write([]byte(fmt.Sprintf("},")))
 		}
-		//json.NewEncoder(w).Encode(spaces)
+	}
+	defer grpc_client.Close()
+}
 
+func fiveParkspaces(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	ConnectGRPC(GRPC_HOST_PP)
+	client := parkplatz.NewParkplatzClient(grpc_client)
+	ctx := context.Background()
+	utils, err := client.Utilization(ctx, &parkplatz.UtilizationRequest{ServiceName: "Test"})
+	if err != nil {
+		json.NewEncoder(w).Encode(err)
+		w.Write([]byte(fmt.Sprintf("[")))
+	} else {
+		w.Write([]byte(fmt.Sprintf("[")))
+		for i := 0; i < 5; i++ {
+			w.Write([]byte(fmt.Sprintf("{")))
+			res, err := utils.Recv()
+			if err == io.EOF {
+				defer grpc_client.Close()
+				w.Write([]byte(fmt.Sprintf("}]")))
+				return
+			}
+			if err != nil {
+				json.NewEncoder(w).Encode(err)
+			}
+			w.Write([]byte(fmt.Sprintf("\"DisplayName\": \"%s\",", res.GetDisplayName())))
+			w.Write([]byte(fmt.Sprintf("\"TotalSpots\": %d,", res.GetTotalSpots())))
+			w.Write([]byte(fmt.Sprintf("\"UtilizedSpots\": %d", res.GetUtilizedSpots())))
+			w.Write([]byte(fmt.Sprintf("},")))
+		}
 	}
 	defer grpc_client.Close()
 }
@@ -251,17 +260,39 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 					TicketType:   ticketReq.TicketType}).Error; err != nil {
 				w.Write([]byte("{\"Response\": \"false at Create ticket\"}"))
 			} else {
-				// ConnectGRPC(GRPC_HOST_BB)
-				// client := user.NewUserServiceClient(grpc_client)
-				// ctx := context.Background()
-				// verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
-				w.Write([]byte(fmt.Sprintf("{\"Geld gebucht\": \"%f\"}", bill_sum)))
+				ConnectGRPC(GRPC_HOST_BB)
+				client := account.NewAccountServiceClient(grpc_client)
+				ctx := context.Background()
+				acc, err := client.GetIban(ctx, &account.UserId{
+					UserId: ticketReq.UId,
+				})
+				if err != nil {
+					fmt.Println("Der gRPC Call GetIban hat nicht geklappt")
+				} else {
+					w.Write([]byte(fmt.Sprintf("{\"bill\": \"%f\"}", bill_sum)))
+				}
+				message, err := client.Transfer(ctx, &account.Transfer{
+					UserId:    ticketReq.UId,
+					Iban:      acc.Iban,
+					Purpose:   "Ticket gekauft",
+					DestIban:  DEST_IBAN,
+					Amount:    fmt.Sprintf("%f", bill_sum),
+					StartDate: "",
+					Repeat:    "",
+				})
+				if err != nil {
+					fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
+					json.NewEncoder(w).Encode(message)
+				} else {
+					w.Write([]byte(fmt.Sprintf("{\"bill\": \"%f\"}", bill_sum)))
+				}
 			}
 		}
 		defer GetDB().Close()
 	} else {
 		w.Write([]byte("{\"Response\": \"false\"}"))
 	}
+	defer grpc_client.Close()
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
@@ -288,6 +319,7 @@ func handleRequests() {
 	myRouter.HandleFunc("/user", validateUser).Methods("POST")
 	myRouter.HandleFunc("/buy", buyTicket).Methods("POST")
 	myRouter.HandleFunc("/parkspace", updateParkingspace)
+	myRouter.HandleFunc("/fiveparkspaces", updateParkingspace)
 
 	handler := cors.Default().Handler(myRouter)
 	log.Fatal(http.ListenAndServe(":"+API_PORT, handler))

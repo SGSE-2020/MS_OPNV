@@ -10,7 +10,7 @@
         <div class="card small">
             <h3>Freie Parkplätze</h3>
             <ul>
-                <li v-for="i in 2" :key="i">
+                <li v-for="i in 5" :key="i">
                     {{spaces[i - 1].DisplayName}}:
                     {{spaces[i - 1].TotalSpots - spaces[i - 1].UtilizedSpots}}
                     </li>
@@ -36,15 +36,12 @@ export default {
         };
     },
     created() {
-        axios.get(`${process.env.VUE_APP_BACKEND_HOST}/parkspace`)
+        axios.get(`${process.env.VUE_APP_BACKEND_HOST}/fiveparkspaces`)
                             .then((response) => {
-                                // console.log(response);
                                 this.spaces = response.data;
                             })
                             .catch((e) => {
                                 this.error.push(e);
-                                console.log('Fehler beim Daten holen');
-                                console.log(e);
                             });
     },
     methods: {

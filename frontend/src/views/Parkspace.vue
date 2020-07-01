@@ -44,13 +44,10 @@ export default {
     created() {
         axios.get(`${process.env.VUE_APP_BACKEND_HOST}/parkspace`)
                             .then((response) => {
-                                // console.log(response);
                                 this.spaces = response.data;
                             })
                             .catch((e) => {
                                 this.error.push(e);
-                                console.log('Fehler beim Daten holen');
-                                console.log(e);
                             });
     },
     components: {
