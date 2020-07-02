@@ -35,6 +35,25 @@
                             <figcaption>Busfahrplan der Smart City</figcaption>
                         </figure>
                     </div>
+                    <div id="container" class="row">
+                        <h3>Übersicht Preis</h3>
+                        <p>
+                            Bachten Sie: Monatstickets gelten 30 Tage
+                            und erhalten 10% Rabatt auf den Tagespreis.
+                        </p>
+                        <table>
+                        <tr>
+                            <th>Zone</th>
+                            <th>Preis</th>
+                            <th>Monatsticket</th>
+                        </tr>
+                        <tr v-for="area in areas" :key="area.id">
+                            <td>{{area.name}}</td>
+                            <td>{{area.price}} €</td>
+                            <td>{{(area.price * 30) - ((area.price) * 30 * 0.1)}} €</td>
+                        </tr>
+                        </table>
+                    </div>
                 </div>
                 <TheSidebar />
             </div>
@@ -48,6 +67,19 @@ import TheSidebar from '../components/TheSidebar.vue';
 
 export default {
     name: 'Schedule',
+    data() {
+        return {
+            areas: [
+                { id: 1, name: 'SB-Zone-1', price: 2.5 },
+                { id: 2, name: 'SB-Zone-2', price: 1.5 },
+                { id: 3, name: 'SB-Zone-3', price: 2.0 },
+                { id: 4, name: 'B-Zone-1', price: 1.5 },
+                { id: 5, name: 'B-Zone-2', price: 2.5 },
+                { id: 6, name: 'B-Zone-3', price: 2.0 },
+                { id: 7, name: 'B-Zone-4', price: 3.5 },
+            ],
+        };
+    },
     components: {
         TheHeader,
         TheSidebar,

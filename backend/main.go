@@ -60,7 +60,7 @@ type Ticket struct {
 
 type BuyTicketRequest struct {
 	gorm.Model
-	UId        string `json:"uId"`
+	Token      string `json:"uId"`
 	AreaType   string `json:"areaType"`
 	TicketType int    `json:"ticketType"`
 }
@@ -223,94 +223,122 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 
 func getTickets(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var temp_user user.UserId
+	var temp_user user.UserToken
 
 	json.Unmarshal(reqBody, &temp_user)
-	w.Header().Set("Content-Type", "application/json")
 
-	fmt.Println(temp_user.Uid)
-	if ConnectDB() {
-		var resultTickets []Ticket
-		if err := GetDB().Where("uid = ?", temp_user.Uid).First(&resultTickets).Error; err != nil {
-			json.NewEncoder(w).Encode(resultTickets)
+	w.Header().Set("Content-Type", "application/json")
+	ConnectGRPC(GRPC_HOST_BB)
+	client := user.NewUserServiceClient(grpc_client)
+	ctx := context.Background()
+	verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
+	if err != nil {
+		fmt.Println("Der gRPC Call VerifyUser hat nicht geklappt")
+	} else {
+		userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
+		if err != nil {
+			fmt.Println("Der gRPC Call GetUser hat nicht geklappt")
 		} else {
-			fmt.Println("Keine Tickets gefunden")
-			w.Write([]byte("{\"Response\": \"Keine Tickets gefunden\"}"))
+			json.NewEncoder(w).Encode(userData)
+			if ConnectDB() {
+				var resultTickets []Ticket
+				if err := GetDB().Where("uid = ?", userData.Uid).Find(&resultTickets).Error; err != nil {
+					json.NewEncoder(w).Encode(resultTickets)
+				} else {
+					fmt.Println("Keine Tickets gefunden")
+					w.Write([]byte("{\"Response\": \"Keine Tickets gefunden\"}"))
+				}
+				defer GetDB().Close()
+			}
 		}
-		defer GetDB().Close()
 	}
+	defer grpc_client.Close()
 }
 
 func buyTicket(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var ticketReq BuyTicketRequest
-	json.Unmarshal(reqBody, &ticketReq)
-	json.NewEncoder(w).Encode(ticketReq)
+	var temp_user BuyTicketRequest
 
-	if ConnectDB() {
-		var resultUser User
+	json.Unmarshal(reqBody, &temp_user)
 
-		if err := GetDB().Where("uid = ?", ticketReq.UId).First(&resultUser).Error; err != nil {
-			w.Write([]byte("{\"Response\": \"false at Where Uid\"}"))
-			fmt.Println(err)
+	w.Header().Set("Content-Type", "application/json")
+	ConnectGRPC(GRPC_HOST_BB)
+	client := user.NewUserServiceClient(grpc_client)
+	ctx := context.Background()
+	verifiedUser, err := client.VerifyUser(ctx, &user.UserToken{Token: temp_user.Token})
+	if err != nil {
+		fmt.Println("Der gRPC Call VerifyUser hat nicht geklappt")
+	} else {
+		userData, err := client.GetUser(ctx, &user.UserId{Uid: verifiedUser.Uid})
+		if err != nil {
+			fmt.Println("Der gRPC Call GetUser hat nicht geklappt")
 		} else {
-			var now = time.Now()
-			var valDate time.Time
-			var temp_area Area
-			var bill_sum float32
-			if err := GetDB().Where("area_type = ?", ticketReq.AreaType).First(&temp_area).Error; err != nil {
-				fmt.Println("false at Where Area")
-				fmt.Println(err)
-			} else {
-				if ticketReq.TicketType == 0 {
-					valDate = now.AddDate(0, 0, 1)
-					bill_sum = temp_area.Price
+			defer grpc_client.Close()
+			if ConnectDB() {
+				var resultUser User
+				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultUser).Error; err != nil {
+					w.Write([]byte("{\"Response\": \"false at Where Uid\"}"))
+					fmt.Println(err)
 				} else {
-					valDate = now.AddDate(0, 1, 0)
-					var bill_sum_temp = temp_area.Price * 0.2
-					bill_sum = bill_sum_temp * 30
-				}
-			}
-			if err := GetDB().Create(
-				&Ticket{
-					UId:          ticketReq.UId,
-					AreaType:     ticketReq.AreaType,
-					Qrcode:       "DummyQRCode",
-					Validitydate: valDate,
-					TicketType:   ticketReq.TicketType}).Error; err != nil {
-				fmt.Println("false at Create Ticket")
-			} else {
-				ConnectGRPC(GRPC_HOST_BANK)
-				client := account.NewAccountServiceClient(grpc_client)
-				ctx := context.Background()
-				acc, err := client.GetIban(ctx, &account.UserId{
-					UserId: ticketReq.UId,
-				})
-				if err != nil {
-					fmt.Println("Der gRPC Call GetIban hat nicht geklappt")
-				} else {
-					fmt.Println(acc.Iban)
-					var temp_amount string
-					temp_amount = fmt.Sprintf("%f", bill_sum)
-					message, err := client.Transfer(ctx, &account.Transfer{
-						UserId:   ticketReq.UId,
-						Iban:     acc.Iban,
-						Purpose:  "Ticket gekauft",
-						DestIban: DEST_IBAN,
-						Amount:   temp_amount,
-					})
-					if err != nil {
-						fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
-						fmt.Println(message)
+					var now = time.Now()
+					var valDate time.Time
+					var temp_area Area
+					var bill_sum float32
+					if err := GetDB().Where("area_type = ?", temp_user.AreaType).First(&temp_area).Error; err != nil {
+						fmt.Println("false at Where Area")
+						fmt.Println(err)
 					} else {
-						w.Write([]byte(fmt.Sprintf("{\"bill\": %f}", bill_sum)))
+						if temp_user.TicketType == 0 {
+							valDate = now.AddDate(0, 0, 1)
+							bill_sum = temp_area.Price
+						} else {
+							valDate = now.AddDate(0, 1, 0)
+							var bill_sum_temp = temp_area.Price * 0.1
+							bill_sum = bill_sum_temp * 30
+						}
+						if err := GetDB().Create(
+							&Ticket{
+								UId:          userData.Uid,
+								AreaType:     temp_user.AreaType,
+								Qrcode:       "DummyQRCode",
+								Validitydate: valDate,
+								TicketType:   temp_user.TicketType}).Error; err != nil {
+							fmt.Println("false at Create Ticket")
+						} else {
+							ConnectGRPC(GRPC_HOST_BANK)
+							client := account.NewAccountServiceClient(grpc_client)
+							ctx := context.Background()
+							acc, err := client.GetIban(ctx, &account.UserId{
+								UserId: userData.Uid,
+							})
+							if err != nil {
+								fmt.Println("Der gRPC Call GetIban hat nicht geklappt")
+							} else {
+								fmt.Sprintln("IBAN: %s", acc.Iban)
+								var temp_amount string
+								temp_amount = fmt.Sprintf("%f", bill_sum)
+								message, err := client.Transfer(ctx, &account.Transfer{
+									UserId:   userData.Uid,
+									Iban:     acc.Iban,
+									Purpose:  "Ticket gekauft",
+									DestIban: DEST_IBAN,
+									Amount:   temp_amount,
+								})
+								if err != nil {
+									fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
+									fmt.Println(message)
+								} else {
+									w.Write([]byte(fmt.Sprintf("{\"bill\": %f}", bill_sum)))
+								}
+							}
+						}
 					}
 				}
+				defer GetDB().Close()
+			} else {
+				w.Write([]byte("{\"Response\": \"false\"}"))
 			}
 		}
-		defer GetDB().Close()
-	} else {
-		w.Write([]byte("{\"Response\": \"false\"}"))
 	}
 	defer grpc_client.Close()
 }

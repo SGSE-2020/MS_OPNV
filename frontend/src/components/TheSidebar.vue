@@ -19,6 +19,30 @@
         </div>
         <div class="card small">
             <h3>Werbung</h3>
+            <div class="card small">
+                <img src="../assets/restaurant_bg.png"/>
+                <span style="text-align: center;">Neu Karte Seit heute!</span>
+                <br/>
+                <a
+                class="button"
+                href="https://restaurants.dvess.network/#/"
+                target= "_blank"
+                style="text-align: center;"
+                >Tisch reservieren</a>
+            </div>
+            <div class="card small">
+                <img src="../assets/supermarkt.png"/>
+                <span style="text-align: center;">
+                    Sparen Sie heute bis zu 15% auf ihren Einkauf!
+                </span>
+                <br/>
+                <a
+                class="button"
+                href="https://supermarkt.dvess.network/#"
+                target= "_blank"
+                style="text-align: center;"
+                >Jetzt Einkaufen</a>
+            </div>
         </div>
     </div>
 </template>

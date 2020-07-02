@@ -4,6 +4,17 @@
         <div id="container">
             <div class="row">
                 <div id="center" class="col-sm-8">
+                    <!-- The Modal -->
+                    <div id="myModal" class="modal">
+                        <!-- The Close Button -->
+                        <img class="modal-content" id="img01">
+                        <div id="caption">
+                            <p id="text" style="color: white;"></p>
+                            <p id="text2" style="color: white;"></p>
+                        </div>
+                        <button @click.prevent="buyUser()">Kauf bestätigen</button>
+                        <button @click.prevent="hideModal()">Abbrechen</button>
+                    </div>
                     <div v-if="this.user == true" id="ticket">
                         <form>
                             <fieldset>
@@ -22,7 +33,7 @@
                                     </option>
                                 </select>
                                 <br><br>
-                                <button class="primary" @click.prevent="buy()">Kaufen</button>
+                                <button class="primary" @click.prevent="showModal()">Kaufen</button>
                             </fieldset>
                         </form>
                     </div>
@@ -57,17 +68,17 @@ export default {
             error: [],
             selected: '',
             areas: [
-                { id: 1, name: 'SB-Zone-1' },
-                { id: 2, name: 'SB-Zone-2' },
-                { id: 3, name: 'SB-Zone-3' },
-                { id: 4, name: 'B-Zone-1' },
-                { id: 5, name: 'B-Zone-2' },
-                { id: 6, name: 'B-Zone-3' },
-                { id: 7, name: 'B-Zone-4' },
+                { id: 1, name: 'SB-Zone-1', price: 2.5 },
+                { id: 2, name: 'SB-Zone-2', price: 1.5 },
+                { id: 3, name: 'SB-Zone-3', price: 2.0 },
+                { id: 4, name: 'B-Zone-1', price: 1.5 },
+                { id: 5, name: 'B-Zone-2', price: 2.5 },
+                { id: 6, name: 'B-Zone-3', price: 2.0 },
+                { id: 7, name: 'B-Zone-4', price: 3.5 },
             ],
             tTypes: [
-                { id: 1, name: 'Tagesticket' },
-                { id: 2, name: 'Monatsticket' },
+                { id: 1, name: 'Tagesticket', code: 0 },
+                { id: 2, name: 'Monatsticket', code: 1 },
             ],
         };
     },
@@ -81,37 +92,54 @@ export default {
         });
     },
     methods: {
-        buy() {
+        buyUser() {
+            firebase.auth().currentUser.getIdToken(true).then((idToken) => {
+                            this.buy(idToken);
+                        }).catch((error) => {
+                            console.log(error);
+                        });
+        },
+        buy(idToken) {
             let temptType;
             if (this.tType === 'Tagesticket') {
                 temptType = 0;
             } else {
                 temptType = 1;
             }
-            firebase.auth().currentUser.getIdToken(true).then((idToken) => {
-                axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
-                    Token: idToken,
-                    })
-                    .then((res) => {
-                        axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
-                            UId: res.data.uid,
-                            AreaType: this.area,
-                            TicketType: temptType,
-                            })
-                            .then((response) => {
-                                console.log(response);
-                            })
-                            .catch((e) => {
-                                console.log(e);
-                                this.error.push(e);
-                            });
-                    })
-                    .catch((e) => {
+            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/buy`, {
+                Token: idToken,
+                AreaType: this.area,
+                TicketType: temptType,
+                })
+                .then((response) => {
+                    console.log(response);
+                })
+                .catch((e) => {
                     this.error.push(e);
-                    });
-            }).catch((error) => {
-                console.log(error);
-            });
+                });
+            this.hideModal();
+        },
+        showModal() {
+            let text = document.getElementById('text');
+            let text2 = document.getElementById('text2');
+
+            let modal = document.getElementById('myModal');
+            modal.style.display = 'block';
+
+            let tempArea = this.areas.find((el) => el.name === this.area);
+            let temptType = this.tTypes.find((el) => el.name === this.tType);
+            let bill;
+            if (temptType.name === 'Tagesticket') {
+                bill = tempArea.price;
+            } else {
+                bill = (tempArea.price * 30) - ((tempArea.price) * 30 * 0.1);
+            }
+            text.innerHTML = `Sind sie Sicher das Sie ein Tagesticket für ${this.area} kaufen möchten?`;
+            text2.innerHTML = `Dafür wird Ihr Konto mit ${bill} € belastet!`;
+        },
+        hideModal() {
+            let modal = document.getElementById('myModal');
+            modal.style.display = 'none';
         },
     },
 };
