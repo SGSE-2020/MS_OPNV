@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	account "main/internal/bank"
 	user "main/internal/buergerbuero"
 	parkplatz "main/internal/parkplatz"
 
@@ -111,8 +110,6 @@ func createDB(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte(fmt.Sprintf("{\"Error\": \"%s\"}", err)))
 			} else {
 				fmt.Fprintf(w, "Die Daten wurden erstellt!")
-				w.Write([]byte("{\"Response\": \"User Konnte nicht erstellt werden\"}\""))
-				w.Write([]byte("{\"Response\": \"Und noch ein Zweites\"}\""))
 			}
 		} else {
 			fmt.Fprintf(w, "Die Daten existieren bereits!")
@@ -209,7 +206,7 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 			} else if ConnectDB() {
 				var resultUser User
 				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultUser).Error; err != nil {
-					GetDB().Create(&User{UId: string(userData.Uid)})
+					GetDB().Create(&User{UId: userData.Uid})
 					fmt.Println("User wurde erstellt")
 				} else {
 					fmt.Println("Der User existiert bereits")
@@ -273,7 +270,6 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("Der gRPC Call GetUser hat nicht geklappt")
 		} else {
-			defer grpc_client.Close()
 			if ConnectDB() {
 				var resultUser User
 				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultUser).Error; err != nil {
@@ -305,32 +301,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 								TicketType:   temp_user.TicketType}).Error; err != nil {
 							fmt.Println("false at Create Ticket")
 						} else {
-							ConnectGRPC(GRPC_HOST_BANK)
-							client := account.NewAccountServiceClient(grpc_client)
-							ctx := context.Background()
-							acc, err := client.GetIban(ctx, &account.UserId{
-								UserId: userData.Uid,
-							})
-							if err != nil {
-								fmt.Println("Der gRPC Call GetIban hat nicht geklappt")
-							} else {
-								fmt.Sprintln("IBAN: %s", acc.Iban)
-								var temp_amount string
-								temp_amount = fmt.Sprintf("%f", bill_sum)
-								message, err := client.Transfer(ctx, &account.Transfer{
-									UserId:   userData.Uid,
-									Iban:     acc.Iban,
-									Purpose:  "Ticket gekauft",
-									DestIban: DEST_IBAN,
-									Amount:   temp_amount,
-								})
-								if err != nil {
-									fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
-									fmt.Println(message)
-								} else {
-									w.Write([]byte(fmt.Sprintf("{\"bill\": %f}", bill_sum)))
-								}
-							}
+							w.Write([]byte(fmt.Sprintf("{\"bill\": %f}", bill_sum)))
 						}
 					}
 				}
@@ -414,3 +385,32 @@ func ConnectGRPC(host string) {
 	// 	return true
 	// }
 }
+
+// else {
+// ConnectGRPC(GRPC_HOST_BANK)
+// client := account.NewAccountServiceClient(grpc_client)
+// ctx := context.Background()
+// acc, err := client.GetIban(ctx, &account.UserId{
+// 	UserId: userData.Uid,
+// })
+// if err != nil {
+// 	fmt.Println("Der gRPC Call GetIban hat nicht geklappt")
+// } else {
+// 	fmt.Sprintln("IBAN: %s", acc.Iban)
+// 	var temp_amount string
+// 	temp_amount = fmt.Sprintf("%f", bill_sum)
+// 	message, err := client.Transfer(ctx, &account.Transfer{
+// 		UserId:   userData.Uid,
+// 		Iban:     acc.Iban,
+// 		Purpose:  "Ticket gekauft",
+// 		DestIban: DEST_IBAN,
+// 		Amount:   temp_amount,
+// 	})
+// 	if err != nil {
+// 		fmt.Println("Der gRPC Call Transfer hat nicht geklappt")
+// 		fmt.Println(message)
+// 	} else {
+// 		w.Write([]byte(fmt.Sprintf("{\"bill\": %f}", bill_sum)))
+// 	}
+//}
+// }

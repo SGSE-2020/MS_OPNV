@@ -62,21 +62,6 @@
                             </tr>
                             </table>
                         </div>
-                        <h1>Abglaufene Tickets</h1>
-                        <div>
-                            <table style="width:100%">
-                            <tr>
-                                <th>Bereich</th>
-                                <th>Ticketart</th>
-                                <th>Gültig bis</th>
-                            </tr>
-                            <tr>
-                                <td>Bahn-4</td>
-                                <td>Tagesticket</td>
-                                <td>02.07.2020</td>
-                            </tr>
-                            </table>
-                        </div>
                         </div>
                     <div v-if="this.user == false">
                         Loggen Sie sich ein um diesen Bereich einsehen zu können!
@@ -100,6 +85,7 @@ export default {
         return {
             user: '',
             userinfo: {},
+            tickets: [],
             error: [],
         };
     },
@@ -113,6 +99,7 @@ export default {
         });
         firebase.auth().currentUser.getIdToken(true).then((idToken) => {
                             this.getTickets(idToken);
+                            this.getUser(idToken);
                         }).catch((error) => {
                             console.log(error);
                         });
@@ -128,9 +115,20 @@ export default {
                 })
                 .then((response) => {
                     console.log(response);
+                    this.tickets = response.data;
                 })
                 .catch((e) => {
-                    console.log(e);
+                    this.error.push(e);
+                });
+        },
+        getUser(idToken) {
+            axios.post(`${process.env.VUE_APP_BACKEND_HOST}/user`, {
+                Token: idToken,
+                })
+                .then((response) => {
+                    this.userinfo = response.data;
+                })
+                .catch((e) => {
                     this.error.push(e);
                 });
         },
