@@ -205,8 +205,8 @@ func validateUser(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(err)
 			} else if ConnectDB() {
 				var resultUser User
-				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultUser).Error; err != nil {
-					GetDB().Create(&User{UId: userData.Uid})
+				if err := GetDB().Where("uid = ?", string(userData.Uid)).First(&resultUser).Error; err != nil {
+					GetDB().Create(&User{UId: string(userData.Uid)})
 					fmt.Println("User wurde erstellt")
 				} else {
 					fmt.Println("Der User existiert bereits")
@@ -272,7 +272,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if ConnectDB() {
 				var resultUser User
-				if err := GetDB().Where("uid = ?", userData.Uid).First(&resultUser).Error; err != nil {
+				if err := GetDB().Where("uid = ?", string(userData.Uid)).First(&resultUser).Error; err != nil {
 					w.Write([]byte("{\"Response\": \"false at Where Uid\"}"))
 					fmt.Println(err)
 				} else {
@@ -280,7 +280,7 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 					var valDate time.Time
 					var temp_area Area
 					var bill_sum float32
-					if err := GetDB().Where("area_type = ?", temp_user.AreaType).First(&temp_area).Error; err != nil {
+					if err := GetDB().Where("area_type = ?", string(temp_user.AreaType)).First(&temp_area).Error; err != nil {
 						fmt.Println("false at Where Area")
 						fmt.Println(err)
 					} else {
@@ -294,11 +294,11 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 						}
 						if err := GetDB().Create(
 							&Ticket{
-								UId:          userData.Uid,
-								AreaType:     temp_user.AreaType,
-								Qrcode:       "DummyQRCode",
-								Validitydate: valDate,
-								TicketType:   temp_user.TicketType}).Error; err != nil {
+								UId:          string(userData.Uid),
+								AreaType:     string(temp_user.AreaType),
+								Qrcode:       string("DummyQRCode"),
+								Validitydate: time.Time(valDate),
+								TicketType:   int(temp_user.TicketType)}).Error; err != nil {
 							fmt.Println("false at Create Ticket")
 						} else {
 							w.Write([]byte(fmt.Sprintf("{\"bill\": %f}", bill_sum)))
@@ -312,22 +312,6 @@ func buyTicket(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	defer grpc_client.Close()
-}
-
-func getUser(w http.ResponseWriter, r *http.Request) {
-	if ConnectDB() {
-		var resultUsers []User
-		GetDB().Find(&resultUsers)
-		defer GetDB().Close()
-		arr, err := json.Marshal(resultUsers)
-		if err != nil {
-			w.Write([]byte("{\"Response\": \"User konnte nicht Decodiert werden\"}"))
-		} else {
-			w.Write(arr)
-		}
-	} else {
-		w.Write([]byte("{\"Response\": \"Keine Verbindung zur Datenbank\"}"))
-	}
 }
 
 func handleRequests() {

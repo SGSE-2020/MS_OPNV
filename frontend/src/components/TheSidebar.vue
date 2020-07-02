@@ -21,7 +21,7 @@
             <h3>Werbung</h3>
             <div class="card small">
                 <img src="../assets/restaurant_bg.png"/>
-                <span style="text-align: center;">Neu Karte Seit heute!</span>
+                <span style="text-align: center;">Neue Karte seit heute!</span>
                 <br/>
                 <a
                 class="button"
