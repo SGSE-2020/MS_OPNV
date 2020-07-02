@@ -56,9 +56,9 @@
                                 <th>Gültig bis</th>
                             </tr>
                             <tr>
-                                <td>Bahn-4</td>
+                                <td>SB-Zone-2</td>
                                 <td>Tagesticket</td>
-                                <td>02.07.2020</td>
+                                <td>03.07.2020</td>
                             </tr>
                             </table>
                         </div>
